@@ -570,7 +570,23 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
 .corpo-sec::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--cor-destaque); flex: none; }
 .foto-item { display: block; margin: 0 0 20px; max-width: 560px; }
 .foto-item img { display: block; width: 100%; border-radius: 14px; border: var(--linha) solid var(--cor-linha); }
-.acoes-item { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.acoes-item { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
+/* Editar conhecimento */
+.form-editar { display: grid; gap: 20px; max-width: 760px; }
+.form-editar .campo > span, .form-editar .campo > label { font-size: var(--tamanho-pequeno); font-weight: 700; }
+.form-editar textarea { resize: none; overflow: hidden; line-height: 1.6; font-size: 1rem; }
+.form-editar .titulo-ed { min-height: 84px; font-weight: 700; font-size: 1.125rem; }
+.form-editar .corpo-ed { min-height: 320px; }
+.form-editar select { width: 100%; font: inherit; font-size: 1rem; padding: 14px 16px; border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-campo); background: var(--cor-fundo); color: var(--cor-texto); }
+.caminho-ed { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+@media (max-width: 560px) { .caminho-ed { grid-template-columns: minmax(0, 1fr); } }
+.duas-ed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 560px) { .duas-ed { grid-template-columns: minmax(0, 1fr); } }
+.niveis-ed { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-campo); overflow: hidden; }
+.niveis-ed button { min-height: 50px; font-weight: 800; border-right: var(--linha) solid var(--cor-linha-forte); }
+.niveis-ed button:last-child { border-right: 0; }
+.niveis-ed button[aria-pressed="true"] { background: var(--pc); color: #fff; }
+.acoes-ed { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
 .vazado.pequeno { min-height: 44px; padding: 0 14px; font-size: .875rem; gap: 6px; }
 .vazado.pequeno i { font-size: 17px; }
 .link.apagar { justify-self: start; color: #B3261E; text-decoration-color: #F2B8B5; display: inline-flex; align-items: center; gap: 4px; }
@@ -1103,7 +1119,7 @@ async function lerFoto(arquivo) {
 
 /* texto lido cresce com o conteúdo, sem barra de rolagem dentro */
 function ajustarAltura(t) { if (!t) return; t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; }
-document.addEventListener("input", e => { if (e.target.matches(".texto-lido textarea")) ajustarAltura(e.target); });
+document.addEventListener("input", e => { if (e.target.matches(".texto-lido textarea, .form-editar textarea")) ajustarAltura(e.target); });
 /* corrigir erros: só quando toca no botão; dá para desfazer */
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-corrigir]"), d = e.target.closest("[data-desfazer]");
@@ -1283,6 +1299,7 @@ function paginaItem(x, alvo = "#conteudo", inline = false) {
         </dl>
         <button class="botao" data-perguntar-sobre="${esc("Me explica melhor e liga com o que eu já sei: " + x.t)}"><span>Perguntar ao assistente</span><span class="seta"><i class="ti ti-brain" aria-hidden="true"></i></span></button>
         <div class="acoes-item">
+          <button class="vazado pequeno" data-editar="${x.id}"><i class="ti ti-pencil" aria-hidden="true"></i><span>Editar</span></button>
           <button class="vazado pequeno" data-copiar="${x.id}"><i class="ti ti-copy" aria-hidden="true"></i><span>Copiar</span></button>
           ${inline ? "" : `<button class="vazado pequeno" data-ver-mapa="${x.id}"><i class="ti ti-topology-star-3" aria-hidden="true"></i>Ver no mapa</button>`}
         </div>
@@ -1307,6 +1324,67 @@ function paginaGalho(cam, alvo = "#conteudo", inline = false) {
     <div class="grade">${itens.map(itemBloco).join("")}</div>`;
 }
 let voltarPara = "hoje", navegou = false;
+/* ---------- Editar: o conteúdo vira texto simples e volta para blocos ao salvar ----------
+   linha em branco separa parágrafos · "- " lista · "> " trecho marcado · "Anotação:" anotação · "## " seção */
+const corpoParaTexto = c => (c || []).map(b => typeof b === "string" ? b : b.sec ? "## " + b.sec : b.cit ? "> " + b.cit : b.nota ? "Anotação: " + b.nota : (b.lista || []).map(i => "- " + i).join("\n")).join("\n\n");
+const textoParaCorpo = t => String(t || "").replace(/\r/g, "").split(/\n\s*\n/).map(b => b.trim()).filter(Boolean).map(b => {
+  const ls = b.split("\n").map(l => l.trim());
+  if (ls.every(l => /^[-•]\s+/.test(l))) return {lista: ls.map(l => l.replace(/^[-•]\s+/, ""))};
+  if (/^##\s+/.test(b)) return {sec: b.replace(/^##\s+/, "")};
+  if (/^>\s?/.test(b)) return {cit: ls.map(l => l.replace(/^>\s?/, "")).join(" ")};
+  if (/^anota[cç][aã]o:\s*/i.test(b)) return {nota: b.replace(/^anota[cç][aã]o:\s*/i, "")};
+  return b;
+});
+function abrirEdicao(x, alvo) {
+  const nomes = n => [...new Set(D.map(y => y.c[n]).filter(Boolean))].sort().map(v => `<option value="${esc(v)}">`).join("");
+  let p = x.p;
+  $(alvo).innerHTML = `
+    <div class="cabeca"><span class="rotulo">Editar conhecimento</span></div>
+    <form class="form-editar" id="form-editar">
+      <label class="campo"><span>Título (a ideia principal)</span><textarea class="titulo-ed" name="t" required>${esc(x.t)}</textarea></label>
+      <label class="campo"><span>Conteúdo</span><textarea class="corpo-ed" name="corpo">${esc(corpoParaTexto(x.corpo))}</textarea>
+        <small class="ajuda">Linha em branco separa parágrafos. "- " no começo vira lista, "> " vira trecho marcado, "Anotação:" vira anotação e "## " cria uma seção.</small></label>
+      <div class="campo"><span>Tema, galho e sub-galho</span>
+        <div class="caminho-ed">
+          <input type="text" name="c0" value="${esc(x.c[0] || "")}" list="ed-temas" placeholder="Tema" required>
+          <input type="text" name="c1" value="${esc(x.c[1] || "")}" list="ed-galhos" placeholder="Galho" required>
+          <input type="text" name="c2" value="${esc(x.c[2] || "")}" list="ed-subs" placeholder="Sub-galho (opcional)">
+        </div>
+        <datalist id="ed-temas">${nomes(0)}</datalist><datalist id="ed-galhos">${nomes(1)}</datalist><datalist id="ed-subs">${nomes(2)}</datalist>
+      </div>
+      <div class="duas-ed">
+        <label class="campo"><span>Fonte</span><input type="text" name="f" value="${esc(x.f || "")}" placeholder="Livro, vídeo, pessoa"></label>
+        <label class="campo"><span>Tipo</span><select name="o">${Object.entries(NOME_ORIGEM).map(([k, v]) => `<option value="${k}"${k === x.o ? " selected" : ""}>${v}</option>`).join("")}</select></label>
+      </div>
+      <div class="campo"><span>Prioridade</span>
+        <div class="niveis-ed" role="group" aria-label="Prioridade">${[1, 2, 3, 4, 5].map(n => `<button type="button" data-p="${n}" style="--pc:var(--p${n})" aria-pressed="${n === p}">${n}</button>`).join("")}</div>
+      </div>
+      <p class="erro" id="ed-erro" role="alert"></p>
+      <div class="acoes-ed">
+        <button class="botao" type="submit"><span>Salvar alterações</span><span class="seta"><i class="ti ti-check" aria-hidden="true"></i></span></button>
+        <button class="link" type="button" id="ed-cancelar">Cancelar</button>
+      </div>
+    </form>`;
+  const f = $("#form-editar");
+  f.querySelectorAll("[data-p]").forEach(b => b.onclick = () => { p = +b.dataset.p; f.querySelectorAll("[data-p]").forEach(o => o.setAttribute("aria-pressed", String(o === b))); });
+  const voltar = () => alvo === "#selecao-mapa" ? previaItem(porId(x.id), false) : paginaItem(porId(x.id));
+  $("#ed-cancelar").onclick = voltar;
+  f.onsubmit = async e => {
+    e.preventDefault();
+    const fd = new FormData(f), c = [fd.get("c0"), fd.get("c1"), fd.get("c2")].map(v => String(v || "").trim()).filter(Boolean);
+    if (!String(fd.get("t")).trim()) { $("#ed-erro").textContent = "O título não pode ficar vazio."; return; }
+    if (c.length < 2) { $("#ed-erro").textContent = "Preencha pelo menos o tema e o galho."; return; }
+    const btn = f.querySelector("[type=submit]"); btn.setAttribute("aria-busy", "true"); btn.querySelector("span").textContent = "Salvando…";
+    try {
+      const r = await api(`/api/conhecimentos/${x.id}`, {method: "PATCH", json: {t: String(fd.get("t")).trim(), corpo: textoParaCorpo(fd.get("corpo")), c, f: String(fd.get("f") || "").trim(), o: fd.get("o"), p}});
+      Object.assign(x, r.item);
+      if (telaAtual === "mapa") { desenharMapa(); } else voltar();
+      window.scrollTo(0, 0);
+    } catch (er) { $("#ed-erro").textContent = er.message; btn.removeAttribute("aria-busy"); btn.querySelector("span").textContent = "Salvar alterações"; }
+  };
+  f.querySelectorAll("textarea").forEach(ajustarAltura);
+}
+
 /* copiar: título, texto e fonte, prontos para colar em qualquer lugar */
 function textoParaCopiar(x) {
   const corpo = (x.corpo || []).map(b => typeof b === "string" ? b : b.sec ? b.sec.toUpperCase() : b.cit ? `"${b.cit}"` : b.nota ? `Minha anotação: ${b.nota}` : (b.lista || []).map(i => "- " + i).join("\n")).join("\n\n");
@@ -1355,6 +1433,7 @@ document.addEventListener("click", e => {
   const q = e.target.closest("[data-perguntar-sobre]"); if (q) { ir("assistente"); perguntar(q.dataset.perguntarSobre); return; }
   const m = e.target.closest("[data-ver-mapa]"); if (m) { focoMapa = +m.dataset.verMapa; aba = "grafo"; ir("mapa"); return; }
   if (e.target.closest("[data-ir-arvore]")) { aba = "arvore"; ir("mapa"); return; }
+  const edt = e.target.closest("[data-editar]"); if (edt) { abrirEdicao(porId(+edt.dataset.editar), edt.closest("#selecao-mapa") ? "#selecao-mapa" : "#conteudo"); return; }
   const cp = e.target.closest("[data-copiar]"); if (cp) { copiarItem(porId(+cp.dataset.copiar), cp); return; }
   const ap = e.target.closest("[data-apagar]"); if (ap) { apagarItem(porId(+ap.dataset.apagar)); return; }
   if (e.target.closest("[data-ir-revisao]")) { $("#revisao").scrollIntoView({behavior: "smooth", block: "center"}); return; }
