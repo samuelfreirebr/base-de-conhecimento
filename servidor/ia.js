@@ -114,6 +114,11 @@ export async function videoDoYoutube(url) {
   return { titulo: String(r.titulo || 'Vídeo do YouTube'), trechos: (r.trechos || []).map((x) => ({ h: String(x.h || ''), t: String(x.t || '') })).filter((x) => x.t.trim()) };
 }
 
+/* ---------- corrigir erros de leitura ou transcrição (só quando o Samuel pede) ---------- */
+export async function corrigir(texto) {
+  return chamar(`Corrija neste texto apenas: erros de ortografia e acentuação, pontuação, palavras faltando ou trocadas por erro de leitura de foto (OCR) ou de transcrição de áudio, e quebras de linha no meio de frases. Não reescreva, não resuma, não mude o sentido, o estilo nem a ordem. Mantenha os parágrafos. Devolva só o texto corrigido, sem comentários.\n\n${texto}`, { temperatura: 0 });
+}
+
 /* ---------- assistente: responde só com a base ---------- */
 export async function responder(pergunta, historico, itens) {
   const sistema = `Você é o assistente da base de conhecimento pessoal do Samuel. Ele quer lembrar do que já aprendeu.

@@ -112,6 +112,12 @@ async function api(req, res, url) {
     const r = await ia.lerFoto(`data:${tipo};base64,${img.toString('base64')}`, url.searchParams.get('marcado') === '1');
     return json(res, 200, r);
   }
+  if (rota === 'POST /api/corrigir') {
+    if (!ia.temIA()) throw erro('A IA não está configurada no servidor.', 503);
+    const texto = String((await lerJson(req)).texto || '').trim();
+    if (!texto) throw erro('Não há texto para corrigir.');
+    return json(res, 200, { texto: await ia.corrigir(texto) });
+  }
   if (rota === 'POST /api/imagem') {
     /* a versão leve da foto (o app reduz antes de mandar), guardada para aparecer no conhecimento */
     const img = await lerCorpo(req, 3e6);

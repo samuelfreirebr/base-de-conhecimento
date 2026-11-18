@@ -540,6 +540,19 @@ button.metrica:active { transform: scale(.985); }
 .metrica .ir i { font-size: 15px; color: var(--cor-destaque); transition: transform var(--velocidade); }
 button.metrica:hover .ir i { transform: translateX(3px); }
 
+/* Registrar: texto lido, corrigir e fontes recentes */
+.texto-lido { display: grid; gap: 8px; }
+.texto-lido > label, .texto-lido > span { font-size: var(--tamanho-pequeno); font-weight: 700; }
+.texto-lido textarea { min-height: 170px; font-size: 1.0625rem; line-height: 1.65; padding: 16px 18px; background: var(--cor-fundo); resize: none; overflow: hidden; }
+.acoes-texto { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
+.acoes-texto .vazado.pequeno[aria-busy="true"] { opacity: .6; pointer-events: none; }
+.recentes-fonte { display: flex; flex-wrap: wrap; gap: 8px; }
+.recentes-fonte:empty { display: none; }
+.recentes-fonte button { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 8px 12px; border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-campo); font-size: .8125rem; font-weight: 650; color: var(--cor-texto-2); transition: border-color var(--velocidade); }
+.recentes-fonte button:hover { border-color: var(--cor-texto); }
+.recentes-fonte button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.recentes-fonte button i { font-size: 15px; flex: none; }
+
 /* Leitura do conhecimento */
 .foto-item { display: block; margin: 0 0 20px; max-width: 560px; }
 .foto-item img { display: block; width: 100%; border-radius: 14px; border: var(--linha) solid var(--cor-linha); }
@@ -665,9 +678,11 @@ button.metrica:hover .ir i { transform: translateX(3px); }
             <span class="tempo num" id="tempo-audio">0:00</span>
             <span class="ajuda" id="ajuda-audio">Toque para gravar. Fale do seu jeito, a transcrição sai sozinha.</span>
           </div>
-          <label class="campo" id="campo-transcricao" hidden><span>Transcrição (pode corrigir)</span>
+          <div class="campo texto-lido" id="campo-transcricao" hidden>
+            <label for="txt-audio">Transcrição (pode corrigir)</label>
             <textarea id="txt-audio"></textarea>
-          </label>
+            <div class="acoes-texto"><button type="button" class="vazado pequeno" data-corrigir="txt-audio"><i class="ti ti-wand" aria-hidden="true"></i><span>Corrigir erros</span></button><button type="button" class="link" data-desfazer="txt-audio" hidden>Desfazer correção</button></div>
+          </div>
         </div>
 
         <!-- Foto -->
@@ -722,6 +737,7 @@ button.metrica:hover .ir i { transform: translateX(3px); }
               <button data-origem="nota" aria-pressed="false"><i class="ti ti-bulb cor-nota" aria-hidden="true"></i> Ideia minha</button>
             </div>
             <input type="text" id="origem-nome" placeholder="Nome do livro, vídeo ou pessoa (opcional)">
+            <div class="recentes-fonte" id="recentes-fonte" aria-label="Fontes recentes"></div>
           </div>
 
           <div class="pergunta">
@@ -884,6 +900,7 @@ function ir(nome, semHistorico) {
   if (nome === "mapa") desenharMapa();
   if (nome === "tempo") desenharTempo();
   if (nome === "hoje") desenharHoje();
+  if (nome === "registrar") fontesRecentes();
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-ir]"); if (b) { e.preventDefault(); ir(b.dataset.ir); } });
 
@@ -976,6 +993,7 @@ $$(".tipos button").forEach(b => b.onclick = () => {
 $$(".escolha button").forEach(b => b.onclick = () => {
   reg.marca = b.dataset.marca; apertar(".escolha", "data-marca", reg.marca);
   $("#ajuda-marca").textContent = reg.marca === "sim" ? "Reconhece marca-texto de qualquer cor, caneta, lápis, sublinhado, colchete ou traço na margem, círculo e seta." : "Pega todo o texto da página que faça sentido, sem número de página nem cabeçalho.";
+  if (reg.fotoAtual) lerFoto(reg.fotoAtual);   /* mudou a escolha: lê a mesma foto de novo */
 });
 $$(".origens button").forEach(b => b.onclick = () => { reg.origem = b.dataset.origem; apertar(".origens", "data-origem", reg.origem); });
 $$(".niveis button").forEach(b => b.onclick = () => { reg.nivel = +b.dataset.nivel; apertar(".niveis", "data-nivel", b.dataset.nivel); });
@@ -1027,7 +1045,7 @@ $("#btn-gravar").onclick = async () => {
       aoSegundo: s => $("#tempo-audio").textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"),
       aoTranscrever: () => { pararGravacao = null; g.classList.remove("ativo"); botao.disabled = true; botao.innerHTML = '<i class="ti ti-loader-2" aria-hidden="true"></i>'; ajuda.textContent = "Transcrevendo…"; barras.forEach(b => b.style.height = ""); },
     });
-    const campo = $("#txt-audio"); campo.value = campo.value.trim() ? campo.value.trim() + "\n\n" + texto : texto;
+    const campo = $("#txt-audio"); campo.value = campo.value.trim() ? campo.value.trim() + "\n\n" + texto : texto; setTimeout(() => ajustarAltura(campo));
     $("#campo-transcricao").hidden = false; ajuda.textContent = "Pronto. Confira o texto e corrija se precisar. Pode gravar mais.";
   } catch (e) {
     ajuda.textContent = e.name === "NotAllowedError" ? "Libere o microfone no navegador para gravar." : e.message;
@@ -1045,21 +1063,58 @@ async function reduzirImagem(arquivo, max = 2000, qualidade = .88) {
   return new Promise(r => c.toBlob(r, "image/jpeg", qualidade));
 }
 async function lerFoto(arquivo) {
+  const nova = reg.fotoAtual !== arquivo; reg.fotoAtual = arquivo;
   const box = $("#previa-foto"); box.hidden = false;
   box.innerHTML = `<img src="${URL.createObjectURL(arquivo)}" alt="Foto enviada"><div class="lendo" aria-label="Lendo a página"><i></i><i></i><i></i></div>`;
   const marcado = reg.marca === "sim";
   try {
     const d = await api("/api/foto?marcado=" + (marcado ? 1 : 0), {method: "POST", body: await reduzirImagem(arquivo), headers: {"content-type": "image/jpeg"}});
     /* guarda uma versão leve (1280 px) só para mostrar; a de leitura não fica salva */
-    api("/api/imagem", {method: "POST", body: await reduzirImagem(arquivo, 1280, .72), headers: {"content-type": "image/jpeg"}}).then(r => reg.imagem = r.imagem).catch(() => {});
+    if (nova || !reg.imagem) api("/api/imagem", {method: "POST", body: await reduzirImagem(arquivo, 1280, .72), headers: {"content-type": "image/jpeg"}}).then(r => reg.imagem = r.imagem).catch(() => {});
     if (d.fonte && !$("#origem-nome").value.trim()) $("#origem-nome").value = d.fonte;
     const n = d.trechos.length;
     const msg = !n ? (marcado ? "Não achei marcação nessa foto. Tente com mais luz ou escolha \"Não, tudo\"." : "Não consegui ler texto nessa foto.")
       : marcado ? `Encontrei ${n} ${n === 1 ? "trecho marcado" : "trechos marcados"}${d.marcacoes ? ": " + esc(d.marcacoes) : ""}.` : "Li a página.";
-    box.querySelector(".lendo").outerHTML = `<p class="achado"><i class="ti ti-sparkles" aria-hidden="true"></i>${msg}</p><label class="campo"><span>Texto lido (pode corrigir)</span><textarea id="txt-foto">${esc(d.trechos.join("\n\n"))}</textarea></label>`;
+    box.querySelector(".lendo").outerHTML = `<p class="achado"><i class="ti ti-sparkles" aria-hidden="true"></i>${msg}</p><div class="campo texto-lido"><label for="txt-foto">Texto lido (pode corrigir)</label><textarea id="txt-foto">${esc(d.trechos.join("\n\n"))}</textarea><div class="acoes-texto"><button type="button" class="vazado pequeno" data-corrigir="txt-foto"><i class="ti ti-wand" aria-hidden="true"></i><span>Corrigir erros</span></button><button type="button" class="link" data-desfazer="txt-foto" hidden>Desfazer correção</button></div></div>`;
+    ajustarAltura($("#txt-foto"));
   } catch (e) { box.querySelector(".lendo").outerHTML = `<p class="erro">${esc(e.message)}</p>`; }
 }
 ["#foto-camera", "#foto-galeria"].forEach(s => $(s).onchange = e => { const f = e.target.files[0]; if (f) lerFoto(f); e.target.value = ""; });
+
+/* texto lido cresce com o conteúdo, sem barra de rolagem dentro */
+function ajustarAltura(t) { if (!t) return; t.style.height = "auto"; t.style.height = t.scrollHeight + 2 + "px"; }
+document.addEventListener("input", e => { if (e.target.matches(".texto-lido textarea")) ajustarAltura(e.target); });
+/* corrigir erros: só quando toca no botão; dá para desfazer */
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-corrigir]"), d = e.target.closest("[data-desfazer]");
+  if (d) { const t = $("#" + d.dataset.desfazer); t.value = t.dataset.antes || t.value; ajustarAltura(t); d.hidden = true; return; }
+  if (!b) return;
+  const t = $("#" + b.dataset.corrigir), rot = b.querySelector("span"), desf = b.parentElement.querySelector("[data-desfazer]");
+  if (!t.value.trim()) return;
+  b.setAttribute("aria-busy", "true"); rot.textContent = "Corrigindo…";
+  try {
+    const r = await api("/api/corrigir", {method: "POST", json: {texto: t.value}});
+    t.dataset.antes = t.value; t.value = r.texto; ajustarAltura(t); desf.hidden = false; rot.textContent = "Corrigido";
+  } catch (er) { rot.textContent = er.message.slice(0, 40); }
+  b.removeAttribute("aria-busy"); setTimeout(() => rot.textContent = "Corrigir erros", 1800);
+});
+/* fontes recentes: as 3 últimas usadas, para não digitar de novo */
+function fontesRecentes() {
+  const vistas = new Set(), lista = [];
+  for (const x of [...D].sort((a, b) => (b.criado || b.d).localeCompare(a.criado || a.d))) {
+    const f = (x.f || "").trim();
+    if (!f || vistas.has(f.toLowerCase())) continue;
+    vistas.add(f.toLowerCase()); lista.push(x);
+    if (lista.length === 3) break;
+  }
+  $("#recentes-fonte").innerHTML = lista.map(x => `<button type="button" data-fonte-recente="${x.id}"><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i><span>${esc(x.f)}</span></button>`).join("");
+}
+$("#recentes-fonte").addEventListener("click", e => {
+  const b = e.target.closest("[data-fonte-recente]"); if (!b) return;
+  const x = porId(+b.dataset.fonteRecente);
+  $("#origem-nome").value = x.f;
+  if (["livro", "video", "evento", "conversa", "nota"].includes(x.o)) { reg.origem = x.o; apertar(".origens", "data-origem", x.o); }
+});
 
 /* Trechos para escolher (YouTube e arquivo) */
 function trechos(alvo, titulo, meta, itens, icone) {
@@ -1135,7 +1190,7 @@ function limparRegistro() {
   ["#txt", "#origem-nome", "#yt-url", "#txt-audio"].forEach(s => $(s).value = "");
   ["#previa-foto", "#yt-trechos", "#arquivo-trechos", "#campo-transcricao"].forEach(s => $(s).hidden = true);
   $("#tempo-audio").textContent = "0:00"; $("#ajuda-audio").textContent = "Toque para gravar. Fale do seu jeito, a transcrição sai sozinha.";
-  reg.yt = null; reg.imagem = null; window.scrollTo(0, 0);
+  reg.yt = null; reg.imagem = null; reg.fotoAtual = null; fontesRecentes(); window.scrollTo(0, 0);
 }
 
 /* ---------- MAPA ---------- */
