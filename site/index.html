@@ -573,6 +573,8 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
 .corpo-sec::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--cor-destaque); flex: none; }
 .foto-item { display: block; margin: 0 0 20px; max-width: 560px; }
 .foto-item img { display: block; width: 100%; border-radius: 14px; border: var(--linha) solid var(--cor-linha); }
+.fonte-link { display: inline-flex; align-items: center; gap: 6px; font-size: var(--tamanho-pequeno); }
+.fonte-link i { font-size: 17px; }
 .acoes-item { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; }
 /* Editar conhecimento */
 .form-editar { display: grid; gap: 20px; max-width: 760px; }
@@ -773,6 +775,7 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
               <button data-origem="nota" aria-pressed="false"><i class="ti ti-bulb cor-nota" aria-hidden="true"></i> Ideia minha</button>
             </div>
             <input type="text" id="origem-nome" placeholder="Nome do livro, vídeo ou pessoa (opcional)">
+            <input type="url" id="origem-link" placeholder="Link da fonte (opcional)" inputmode="url">
             <div class="recentes-fonte" id="recentes-fonte" aria-label="Fontes recentes"></div>
           </div>
 
@@ -1155,6 +1158,7 @@ $("#recentes-fonte").addEventListener("click", e => {
   const b = e.target.closest("[data-fonte-recente]"); if (!b) return;
   const x = porId(+b.dataset.fonteRecente);
   $("#origem-nome").value = x.f;
+  $("#origem-link").value = x.url || "";
   if (["livro", "video", "evento", "conversa", "nota"].includes(x.o)) { reg.origem = x.o; apertar(".origens", "data-origem", x.o); }
 });
 
@@ -1206,7 +1210,7 @@ $("#btn-registrar").onclick = async () => {
   if (!texto) { erro.textContent = falta[reg.tipo]; return; }
   erro.textContent = ""; btn.setAttribute("aria-busy", "true"); btn.querySelector("span").textContent = "Organizando…";
   let d;
-  try { d = await api("/api/registrar", {method: "POST", json: {texto, tipo: reg.tipo, origem: reg.origem, fonte: $("#origem-nome").value.trim(), prioridade: reg.nivel, url: reg.tipo === "youtube" ? reg.yt?.url : undefined, imagem: reg.tipo === "foto" ? reg.imagem : undefined}}); }
+  try { d = await api("/api/registrar", {method: "POST", json: {texto, tipo: reg.tipo, origem: reg.origem, fonte: $("#origem-nome").value.trim(), prioridade: reg.nivel, url: reg.tipo === "youtube" ? reg.yt?.url : ($("#origem-link").value.trim() || undefined), imagem: reg.tipo === "foto" ? reg.imagem : undefined}}); }
   catch (e) { erro.textContent = e.message; return; }
   finally { btn.removeAttribute("aria-busy"); btn.querySelector("span").textContent = "Registrar conhecimento"; }
   const novo = d.item; D.push(novo); d.ligados.forEach(x => x && L.push([novo.id, x.id]));
@@ -1229,7 +1233,7 @@ $("#btn-registrar").onclick = async () => {
 };
 function limparRegistro() {
   $("#reg-form").hidden = false; $("#reg-resultado").hidden = true;
-  ["#txt", "#origem-nome", "#yt-url", "#txt-audio"].forEach(s => $(s).value = "");
+  ["#txt", "#origem-nome", "#origem-link", "#yt-url", "#txt-audio"].forEach(s => $(s).value = "");
   ["#previa-foto", "#yt-trechos", "#arquivo-trechos", "#campo-transcricao"].forEach(s => $(s).hidden = true);
   $("#tempo-audio").textContent = "0:00"; $("#ajuda-audio").textContent = "Toque para gravar. Fale do seu jeito, a transcrição sai sozinha.";
   reg.yt = null; reg.imagem = null; reg.fotoAtual = null; fontesRecentes(); window.scrollTo(0, 0);
@@ -1298,6 +1302,7 @@ function paginaItem(x, alvo = "#conteudo", inline = false) {
       <aside class="ficha-lado">
         <dl class="ficha-mini">
           <div><dt>Fonte</dt><dd>${icone(x.o)}<span>${esc(x.f)}</span></dd></div>
+          ${x.url ? `<div><dt>Link</dt><dd><a class="link fonte-link" href="${esc(x.url)}" target="_blank" rel="noopener"><i class="ti ${/youtu/.test(x.url) ? "ti-brand-youtube cor-video" : "ti-external-link"}" aria-hidden="true"></i>${/youtu/.test(x.url) ? "Assistir no YouTube" : "Abrir fonte"}</a></dd></div>` : ""}
           <div><dt>Tipo</dt><dd>${NOME_ORIGEM[x.o] || x.o}</dd></div>
           <div><dt>Registrado</dt><dd>${dt}</dd></div>
           <div><dt>Prioridade</dt><dd>${prio(x.p)} ${x.p} de 5</dd></div>
@@ -1360,6 +1365,7 @@ function abrirEdicao(x, alvo) {
       </div>
       <div class="duas-ed">
         <label class="campo"><span>Fonte</span><input type="text" name="f" value="${esc(x.f || "")}" placeholder="Livro, vídeo, pessoa"></label>
+        <label class="campo" style="grid-column: 1 / -1"><span>Link da fonte</span><input type="url" name="url" value="${esc(x.url || "")}" placeholder="https://..." inputmode="url"></label>
         <label class="campo"><span>Tipo</span><select name="o">${Object.entries(NOME_ORIGEM).map(([k, v]) => `<option value="${k}"${k === x.o ? " selected" : ""}>${v}</option>`).join("")}</select></label>
       </div>
       <div class="campo"><span>Prioridade</span>
@@ -1382,7 +1388,7 @@ function abrirEdicao(x, alvo) {
     if (c.length < 2) { $("#ed-erro").textContent = "Preencha pelo menos o tema e o galho."; return; }
     const btn = f.querySelector("[type=submit]"); btn.setAttribute("aria-busy", "true"); btn.querySelector("span").textContent = "Salvando…";
     try {
-      const r = await api(`/api/conhecimentos/${x.id}`, {method: "PATCH", json: {t: String(fd.get("t")).trim(), corpo: textoParaCorpo(fd.get("corpo")), c, f: String(fd.get("f") || "").trim(), o: fd.get("o"), p}});
+      const r = await api(`/api/conhecimentos/${x.id}`, {method: "PATCH", json: {url: String(fd.get("url") || "").trim(), t: String(fd.get("t")).trim(), corpo: textoParaCorpo(fd.get("corpo")), c, f: String(fd.get("f") || "").trim(), o: fd.get("o"), p}});
       Object.assign(x, r.item);
       if (telaAtual === "mapa") { desenharMapa(); } else voltar();
       window.scrollTo(0, 0);

@@ -63,7 +63,7 @@ async function registrar(d) {
     t: org.titulo, corpo: org.corpo, c: org.caminho, f: org.fonte || d.fonte || '',
     o: ['livro', 'video', 'evento', 'conversa', 'nota'].includes(d.origem) ? d.origem : 'nota',
     tipo: d.tipo || 'texto', p: escolhida >= 1 && escolhida <= 5 ? escolhida : org.prioridade, pIA: org.prioridade,
-    extras: { ...(d.url ? { url: String(d.url) } : {}), ...(/^[a-f0-9]{24}\.jpg$/.test(d.imagem || '') ? { imagem: d.imagem } : {}) },
+    extras: { ...(/^https?:\/\/\S+$/i.test(String(d.url || '').trim()) ? { url: String(d.url).trim() } : {}), ...(/^[a-f0-9]{24}\.jpg$/.test(d.imagem || '') ? { imagem: d.imagem } : {}) },
   });
   org.ligacoes.forEach((id) => base.ligar(item.id, id));
   await base.salvar();

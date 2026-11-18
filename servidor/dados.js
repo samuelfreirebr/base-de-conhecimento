@@ -90,6 +90,7 @@ export function editar(id, campos) {
   if (Array.isArray(campos.corpo)) x.corpo = campos.corpo;
   if (Array.isArray(campos.c) && campos.c.length) x.c = campos.c.map(String);
   if (typeof campos.f === 'string') x.f = campos.f;
+  if (typeof campos.url === 'string') { const u = campos.url.trim(); if (/^https?:\/\/\S+$/i.test(u)) x.url = u; else if (!u) delete x.url; }
   if (['livro', 'video', 'evento', 'conversa', 'nota'].includes(campos.o)) x.o = campos.o;
   if ([1, 2, 3, 4, 5].includes(Number(campos.p))) x.p = Number(campos.p);
   x.editado = new Date().toISOString();

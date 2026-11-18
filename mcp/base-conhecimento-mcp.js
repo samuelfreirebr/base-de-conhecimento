@@ -36,7 +36,7 @@ async function api(caminho, metodo = 'GET', corpo) {
   return d;
 }
 
-const texto = (x) => `#${x.id} · ${x.c.join(' > ')} · prioridade ${x.p} · ${x.f || 'sem fonte'} · ${x.d}\n${x.t}` +
+const texto = (x) => `#${x.id} · ${x.c.join(' > ')} · prioridade ${x.p} · ${x.f || 'sem fonte'}${x.url ? ' (' + x.url + ')' : ''} · ${x.d}\n${x.t}` +
   ((x.corpo || []).length ? '\n' + x.corpo.map((b) => (typeof b === 'string' ? b : b.sec ? `\n${b.sec}:` : b.cit ? `Trecho: ${b.cit}` : b.nota ? `Anotação: ${b.nota}` : (b.lista || []).map((i) => `- ${i}`).join('\n'))).join('\n') : '');
 
 const FERRAMENTAS = [
@@ -84,11 +84,12 @@ const FERRAMENTAS = [
         origem: { type: 'string', enum: ['livro', 'video', 'evento', 'conversa', 'nota'], description: 'nota = ideia do próprio Samuel' },
         prioridade: { type: 'number', description: '1 a 5; omita para a IA sugerir' },
         caminho: { type: 'array', items: { type: 'string' }, description: '[tema, galho, sub-galho opcional]; omita para a IA escolher. Use listar_temas antes para reaproveitar nomes.' },
+        url: { type: 'string', description: 'Link da fonte (vídeo, artigo), se houver' },
       },
       required: ['texto'],
     },
-    rodar: async ({ texto: t, fonte, origem, prioridade, caminho }) => {
-      const d = await api('/api/registrar', 'POST', { texto: t, fonte, origem: origem || 'nota', prioridade, caminho, tipo: 'mcp' });
+    rodar: async ({ texto: t, fonte, origem, prioridade, caminho, url }) => {
+      const d = await api('/api/registrar', 'POST', { texto: t, fonte, origem: origem || 'nota', prioridade, caminho, url, tipo: 'mcp' });
       return `Registrado como #${d.item.id} em ${d.item.c.join(' > ')}${d.galhoNovo ? ' (galho novo)' : ''}, prioridade ${d.item.p}.` +
         (d.ligados.length ? `\nLigado a: ${d.ligados.filter(Boolean).map((x) => `#${x.id}`).join(', ')}` : '') + (d.aviso ? `\nAviso: ${d.aviso}` : '');
     },
@@ -98,11 +99,11 @@ const FERRAMENTAS = [
     description: 'Corrige um conhecimento existente: título, fonte, prioridade ou caminho [tema, galho, sub-galho]. Não apaga nada.',
     inputSchema: {
       type: 'object',
-      properties: { id: { type: 'number' }, titulo: { type: 'string' }, fonte: { type: 'string' }, prioridade: { type: 'number' }, caminho: { type: 'array', items: { type: 'string' } } },
+      properties: { id: { type: 'number' }, titulo: { type: 'string' }, fonte: { type: 'string' }, url: { type: 'string', description: 'link da fonte' }, prioridade: { type: 'number' }, caminho: { type: 'array', items: { type: 'string' } } },
       required: ['id'],
     },
-    rodar: async ({ id, titulo, fonte, prioridade, caminho }) => {
-      const d = await api(`/api/conhecimentos/${id}`, 'PATCH', { t: titulo, f: fonte, p: prioridade, c: caminho });
+    rodar: async ({ id, titulo, fonte, url, prioridade, caminho }) => {
+      const d = await api(`/api/conhecimentos/${id}`, 'PATCH', { t: titulo, f: fonte, url, p: prioridade, c: caminho });
       return 'Atualizado:\n' + texto(d.item);
     },
   },
