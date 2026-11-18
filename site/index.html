@@ -450,6 +450,7 @@ button.barra:hover > span:first-child { color: var(--cor-destaque); }
 .marco { position: relative; display: grid; }
 .marco-dia { position: absolute; left: -58px; top: 12px; width: 45px; padding: 5px 0; text-align: center; line-height: 1; background: var(--cor-fundo); border: var(--linha) solid var(--cor-linha-forte); border-radius: 12px; }
 .marco-dia strong { display: block; font-size: 1.0625rem; font-weight: 800; letter-spacing: -.03em; }
+.marco-dia .hora-marco { margin-top: 4px; font-size: 9.5px; letter-spacing: .02em; color: var(--cor-texto-2); }
 .marco-dia small { display: block; margin-top: 2px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--cor-secundaria); }
 .marco .marco-dia { border-color: var(--pc); border-width: 1.5px; }
 .marco.p5 .marco-dia strong { color: var(--cor-destaque); }
@@ -893,8 +894,11 @@ const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":
 const caminho = c => c.map((p, i) => i === c.length - 1 ? `<b>${esc(p)}</b>` : esc(p)).join(" › ");
 const prio = p => `<span class="prio" style="--pc:var(--p${p})" aria-label="Prioridade ${p} de 5">${[1,2,3,4,5].map(n => `<i class="${n <= p ? "on" : ""}"></i>`).join("")}</span>`;
 const dataCurta = d => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", {day:"numeric", month:"short"}).replace(".", "");
+/* quando foi registrado: data e hora exatas (os antigos só têm o dia) */
+const quando = x => x.criado || (x.d + "T12:00:00");
+const horaCurta = x => x.criado ? new Date(x.criado).toLocaleTimeString("pt-BR", {hour: "2-digit", minute: "2-digit"}) : "";
 const ligacoes = id => L.filter(l => l.includes(id)).map(l => l[0] === id ? l[1] : l[0]);
-const itemBloco = x => { const d = new Date(x.d + "T12:00:00"); return `<article class="item abre" data-abrir-item="${x.id}" tabindex="0" role="button"><div class="item-topo"><span class="caminho">${caminho(x.c)}</span><span class="item-dia"><strong class="num">${d.getDate()}</strong><span>${d.toLocaleDateString("pt-BR", {month: "short"}).replace(".", "")}</span></span></div><p>${esc(x.t)}</p>${x.corpo ? `<span class="item-resumo">${esc(primeiroTexto(x))}</span>` : ""}<div class="item-rodape"><span><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i><span>${esc(x.f)}</span></span>${prio(x.p)}</div></article>`; };
+const itemBloco = x => { const d = new Date(x.d + "T12:00:00"); return `<article class="item abre" data-abrir-item="${x.id}" tabindex="0" role="button"><div class="item-topo"><span class="caminho">${caminho(x.c)}</span><span class="item-dia"><strong class="num">${d.getDate()}</strong><span>${d.toLocaleDateString("pt-BR", {month: "short"}).replace(".", "")}${horaCurta(x) ? " · " + horaCurta(x) : ""}</span></span></div><p>${esc(x.t)}</p>${x.corpo ? `<span class="item-resumo">${esc(primeiroTexto(x))}</span>` : ""}<div class="item-rodape"><span><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i><span>${esc(x.f)}</span></span>${prio(x.p)}</div></article>`; };
 const itemLista = x => `<li class="abre" data-abrir-item="${x.id}" tabindex="0" role="button" aria-label="Abrir conteúdo completo"><span class="caminho">${caminho(x.c)}</span><p>${esc(x.t)}</p><span class="meta"><span><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i>${esc(x.f)}</span><span class="num">${dataCurta(x.d)}</span>${prio(x.p)}</span></li>`;
 
 /* ---------- Navegação ---------- */
@@ -957,7 +961,7 @@ function desenharHoje() {
   const cont = {}; D.forEach(x => cont[x.c[0]] = (cont[x.c[0]] || 0) + 1);
   const ord = Object.entries(cont).sort((a, b) => b[1] - a[1]), max = ord[0][1];
   $("#barras").innerHTML = ord.map(([t, n], i) => `<button class="barra" data-abrir-galho="${t}"><span>${t}</span><span class="trilho"><i style="width:${n / max * 100}%;animation-delay:${i * 60}ms"></i></span><span class="num">${n}</span></button>`).join("");
-  $("#recentes").innerHTML = [...D].sort((a, b) => b.d.localeCompare(a.d)).slice(0, 4).map(itemLista).join("");
+  $("#recentes").innerHTML = [...D].sort((a, b) => quando(b).localeCompare(quando(a))).slice(0, 4).map(itemLista).join("");
   desenharRevisao();
 }
 function desenharRevisao() {
@@ -1259,7 +1263,7 @@ const voltarBtn = `<button class="voltar" data-voltar><i class="ti ti-arrow-left
 function paginaItem(x, alvo = "#conteudo", inline = false) {
   const lig = ligacoes(x.id).map(porId).filter(Boolean);
   const irmaos = D.filter(y => y.id !== x.id && y.c.join(">") === x.c.join(">"));
-  const dt = new Date(x.d + "T12:00:00").toLocaleDateString("pt-BR", {day: "numeric", month: "short", year: "numeric"}).replace(".", "");
+  const dt = new Date(x.d + "T12:00:00").toLocaleDateString("pt-BR", {day: "numeric", month: "short", year: "numeric"}).replace(".", "") + (horaCurta(x) ? ", " + horaCurta(x) : "");
   const prox = FILA.includes(x.id) ? "Hoje" : "Daqui a " + ((x.id * 7) % 20 + 3) + " dias";
   $(alvo).innerHTML = `${inline ? "" : voltarBtn}
     <div class="conteudo-grade">
@@ -1613,7 +1617,7 @@ addEventListener("resize", () => {
 
 /* ---------- TEMPO ---------- */
 let mesSel = null, temaSel = null;
-const itemTrilha = x => { const d = new Date(x.d + "T12:00:00"); return `<div class="marco${x.p === 5 ? " p5" : ""}" style="--pc:var(--p${x.p})"><span class="marco-dia" aria-hidden="true"><strong class="num">${d.getDate()}</strong><small>${d.toLocaleDateString("pt-BR", {month: "short"}).replace(".", "")}</small></span>${itemBloco(x)}</div>`; };
+const itemTrilha = x => { const d = new Date(x.d + "T12:00:00"); return `<div class="marco${x.p === 5 ? " p5" : ""}" style="--pc:var(--p${x.p})"><span class="marco-dia" aria-hidden="true"><strong class="num">${d.getDate()}</strong><small>${d.toLocaleDateString("pt-BR", {month: "short"}).replace(".", "")}</small>${horaCurta(x) ? `<small class="hora-marco">${horaCurta(x)}</small>` : ""}</span>${itemBloco(x)}</div>`; };
 function desenharTempo() {
   const meses = [];
   for (let i = 12; i >= 0; i--) { const d = new Date(HOJE.getFullYear(), HOJE.getMonth() - i, 1); meses.push(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }
@@ -1626,7 +1630,7 @@ function desenharTempo() {
   $("#filtro-temas").innerHTML = ["Todos", ...temas].map(t => `<button data-tema="${t}" aria-pressed="${(temaSel || "Todos") === t}">${t}</button>`).join("");
   $$("#filtro-temas button").forEach(b => b.onclick = () => { temaSel = b.dataset.tema === "Todos" ? null : b.dataset.tema; desenharTempo(); });
   const lista = meses.filter(m => !mesSel || m === mesSel).reverse().map(m => {
-    const itens = D.filter(x => x.d.startsWith(m) && (!temaSel || x.c[0] === temaSel)).sort((a, b) => b.d.localeCompare(a.d));
+    const itens = D.filter(x => x.d.startsWith(m) && (!temaSel || x.c[0] === temaSel)).sort((a, b) => quando(b).localeCompare(quando(a)));
     if (!itens.length) return "";
     return `<section class="mes"><header class="mes-lado"><h3>${nomeMes(m, {month: "long"})}<span>${m.slice(0, 4)}</span></h3><span class="sec num">${itens.length} ${itens.length === 1 ? "registro" : "registros"}</span></header><div class="trilha">${itens.map(itemTrilha).join("")}</div></section>`;
   }).join("");
