@@ -104,7 +104,10 @@ h3 { font-size: var(--tamanho-texto); font-weight: 700; letter-spacing: -.015em;
 .topo { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 var(--espaco-lateral); padding-top: env(safe-area-inset-top); background: var(--cor-fundo); border-bottom: var(--linha) solid var(--cor-linha); }
 .marca { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; letter-spacing: -.03em; font-size: 1.0625rem; }
 .marca i { width: 9px; height: 9px; background: var(--cor-destaque); display: inline-block; }
-.topo-acao { width: 40px; height: 40px; display: grid; place-items: center; font-size: 22px; margin-right: -8px; }
+.topo-acoes { display: flex; align-items: center; gap: 2px; margin-right: -8px; }
+.topo-acao { width: 40px; height: 40px; display: grid; place-items: center; font-size: 22px; }
+.topo-acao.girando i { animation: girar .8s linear infinite; }
+@keyframes girar { to { transform: rotate(360deg); } }
 main { padding: 28px var(--espaco-lateral) calc(var(--altura-menu-celular) + 48px + env(safe-area-inset-bottom)); max-width: var(--largura-maxima); margin: 0 auto; }
 .tela[hidden] { display: none !important; }
 .tela { animation: entra .28s var(--curva); }
@@ -634,7 +637,10 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
 
   <header class="topo">
     <span class="marca"><i aria-hidden="true"></i>Base de conhecimento pessoal</span>
-    <button class="topo-acao" data-ir="buscar" aria-label="Buscar"><i class="ti ti-search" aria-hidden="true"></i></button>
+    <div class="topo-acoes">
+      <button class="topo-acao" id="atualizar" aria-label="Atualizar"><i class="ti ti-refresh" aria-hidden="true"></i></button>
+      <button class="topo-acao" data-ir="buscar" aria-label="Buscar"><i class="ti ti-search" aria-hidden="true"></i></button>
+    </div>
   </header>
 
   <aside class="lateral">
@@ -1785,6 +1791,12 @@ $("#mic").onclick = async () => {
 carregarBase().then(rotear).catch(e => {
   $("main").innerHTML = `<div class="vazio"><h2>Não consegui abrir sua base.</h2><p class="sec">${esc(e.message)}</p><button class="botao" onclick="location.reload()"><span>Tentar de novo</span><span class="seta"><i class="ti ti-refresh" aria-hidden="true"></i></span></button></div>`;
 });
+/* atualizar: busca a versão mais nova do app e dos dados (no app instalado não há botão do navegador) */
+$("#atualizar").onclick = async () => {
+  $("#atualizar").classList.add("girando");
+  try { const reg = await navigator.serviceWorker?.getRegistration(); await reg?.update(); } catch {}
+  location.reload();
+};
 /* sem zoom da página no iPhone (pinça e toque duplo); o zoom fica só dentro do mapa */
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), {passive: false}));
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
