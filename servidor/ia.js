@@ -120,16 +120,19 @@ export async function corrigir(texto) {
 }
 
 /* ---------- assistente: responde só com a base ---------- */
-export async function responder(pergunta, historico, itens) {
+export async function responder(pergunta, historico, itens, todos = []) {
   const sistema = `Você é o assistente da base de conhecimento pessoal do Samuel. Ele quer lembrar do que já aprendeu.
 Regras:
 - Responda em português do Brasil, direto e claro, usando SÓ os conhecimentos fornecidos abaixo. Não use conhecimento externo e não invente.
 - Cite cada conhecimento usado no fim da frase como [#id].
-- Se nada abaixo responder a pergunta, diga que não encontrou isso na base e sugira registrar.
+- Você recebe o texto completo dos conhecimentos mais ligados à pergunta e um ÍNDICE com o título de TUDO o que está na base. Use o índice para saber o que existe: se a resposta só aparece no índice, diga o que é pelo título e cite [#id] para ele abrir.
+- Se nem os textos nem o índice responderem, diga que não encontrou isso na base e sugira registrar.
 - Formato: um parágrafo curto; se ajudar, uma lista com "- " no começo de cada item. Sem títulos, sem negrito.`;
   const contexto = itens.map((x) => `#${x.id} | ${x.c.join(' > ')} | fonte: ${x.f || '-'} | prioridade ${x.p}\n${x.t}\n${(x.corpo || []).map((b) => (typeof b === 'string' ? b : b.sec ? '\n' + b.sec + ':' : b.cit ? 'Trecho: ' + b.cit : b.nota ? 'Anotação: ' + b.nota : (b.lista || []).map((i) => '- ' + i).join('\n'))).join('\n')}`).join('\n\n');
+  const dentro = new Set(itens.map((x) => x.id));
+  const indice = todos.filter((x) => !dentro.has(x.id)).map((x) => `#${x.id} | ${x.c.join(' > ')} | ${x.f || '-'} | ${x.t}`).join('\n');
   const conversa = (historico || []).slice(-6).map((m) => `${m.quem === 'eu' ? 'Samuel' : 'Assistente'}: ${m.texto}`).join('\n');
-  const resposta = await chamar(`CONHECIMENTOS DA BASE:\n${contexto || '(nenhum encontrado)'}\n\n${conversa ? 'CONVERSA ATÉ AQUI:\n' + conversa + '\n\n' : ''}PERGUNTA: ${pergunta}`, { sistema, temperatura: 0.3 });
+  const resposta = await chamar(`CONHECIMENTOS DA BASE (texto completo):\n${contexto || '(nenhum encontrado)'}\n\n${indice ? 'ÍNDICE DO RESTO DA BASE (só títulos):\n' + indice + '\n\n' : ''}${conversa ? 'CONVERSA ATÉ AQUI:\n' + conversa + '\n\n' : ''}PERGUNTA: ${pergunta}`, { sistema, temperatura: 0.3 });
   const ids = [...new Set([...resposta.matchAll(/\[#(\d+)\]/g)].map((m) => Number(m[1])))];
   return { resposta, ids };
 }

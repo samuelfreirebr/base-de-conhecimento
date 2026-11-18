@@ -38,9 +38,9 @@ export const porId = (id) => base.itens.find((x) => x.id === Number(id));
 export const ligacoesDe = (id) => base.ligacoes.filter((l) => l.includes(id)).map((l) => (l[0] === id ? l[1] : l[0]));
 
 /* ---------- texto para busca ---------- */
-const PARADAS = new Set('sobre para como mais isso esse essa este esta pelo pela quando quem onde porque entao tambem muito muita voce voces eles elas nosso nossa minha meu seus suas tudo nada cada qual quais algo alguma algum livro video coisa coisas sabe saber lembra lembrar aprendi quero tenho anotei resume resumo explica'.split(' '));
+const PARADAS = new Set('sobre para como mais isso esse essa este esta pelo pela quando quem onde porque entao tambem muito muita voce voces eles elas nosso nossa minha meu seus suas tudo nada cada qual quais algo alguma algum livro video coisa coisas sabe saber lembra lembrar aprendi quero tenho anotei resume resumo explica que com uma uns dos das nos nas pra por sem mas foi ser ter tem vou sei the and'.split(' '));
 const semAcento = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-export const palavras = (s) => [...new Set(semAcento(s).split(/[^a-z0-9]+/).filter((w) => w.length > 3 && !PARADAS.has(w)))];
+export const palavras = (s) => [...new Set(semAcento(s).split(/[^a-z0-9]+/).filter((w) => w.length > 2 && !PARADAS.has(w)))];
 export const textoTodo = (x) => [x.t, x.c.join(' '), x.f, ...(x.corpo || []).map((b) => (typeof b === 'string' ? b : b.sec || b.cit || b.nota || (b.lista || []).join(' ')))].join(' ');
 
 export function buscar(consulta, limite = 15) {
@@ -95,6 +95,25 @@ export function editar(id, campos) {
   if ([1, 2, 3, 4, 5].includes(Number(campos.p))) x.p = Number(campos.p);
   x.editado = new Date().toISOString();
   return x;
+}
+
+/* juntar vários num só: o corpo junta tudo (uma seção por original, ou o corpo pronto que vier),
+   as ligações passam para o novo e os originais vão para a lixeira com "mescladoEm" */
+export function mesclar(ids, { t, c, corpo, p }) {
+  const orig = ids.map(Number).map(porId);
+  if (orig.length < 2 || orig.some((x) => !x)) return null;
+  const primeiro = orig[0];
+  const novo = adicionar({
+    t: String(t || primeiro.t).trim(), c: Array.isArray(c) && c.length ? c.map(String) : primeiro.c,
+    corpo: Array.isArray(corpo) && corpo.length ? corpo : orig.flatMap((x) => [{ sec: x.t }, ...(x.corpo || [])]),
+    f: primeiro.f, o: primeiro.o, tipo: 'mesclado', p: [1, 2, 3, 4, 5].includes(Number(p)) ? Number(p) : Math.max(...orig.map((x) => x.p)),
+    extras: { ...(orig.find((x) => x.url) ? { url: orig.find((x) => x.url).url } : {}), mesclou: orig.map((x) => x.id) },
+  });
+  const fora = new Set(orig.map((x) => x.id));
+  const vizinhos = new Set(base.ligacoes.filter((l) => l.some((i) => fora.has(i))).flat().filter((i) => !fora.has(i)));
+  for (const x of orig) { apagar(x.id); base.lixeira.at(-1).mescladoEm = novo.id; }
+  for (const v of vizinhos) ligar(novo.id, v);
+  return novo;
 }
 
 /* apagar = mandar para a lixeira (fica no arquivo, dá para recuperar) */

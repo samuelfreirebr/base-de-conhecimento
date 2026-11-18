@@ -1,6 +1,6 @@
 /* Guarda a casca do app para abrir rápido e sem internet.
    A API nunca vem do cache: os dados são sempre os do servidor. */
-const VERSAO = 'base-v3';
+const VERSAO = 'base-v4';
 const CASCA = ['/', '/manifest.webmanifest', '/icone-app-192.png', '/fontes/manrope-latin.woff2', '/fontes/manrope-latin-ext.woff2'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(VERSAO).then((c) => c.addAll(CASCA)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== VERSAO).map((k) => caches.delete(k))))); self.clients.claim(); });

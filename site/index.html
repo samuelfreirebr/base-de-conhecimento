@@ -496,6 +496,13 @@ button.barra:hover > span:first-child { color: var(--cor-destaque); }
 .chat-caixa .mic.gravando { background: var(--cor-texto); color: var(--cor-destaque); animation: pulsa 1.2s ease-in-out infinite; }
 @keyframes pulsa { 50% { box-shadow: 0 0 0 6px rgba(255, 79, 24, .18); } }
 .ref { font-size: 11px; font-weight: 800; color: var(--cor-destaque); vertical-align: super; padding: 0 2px; }
+.chat-achados { display: grid; gap: 6px; margin: 0 0 12px; max-width: 760px; }
+.chat-achados:empty { display: none; }
+.chat-achados > span { font-size: 12px; font-weight: 700; color: var(--cor-secundaria); }
+.chat-achados button { display: flex; align-items: center; gap: 8px; min-width: 0; text-align: left; padding: 10px 12px; border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-campo); font-size: .875rem; font-weight: 600; transition: border-color var(--velocidade); }
+.chat-achados button:hover { border-color: var(--cor-texto); }
+.chat-achados button i { flex: none; font-size: 16px; }
+.chat-achados button b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
 .chat-aviso { font-size: 12px; color: var(--cor-secundaria); display: flex; gap: 6px; align-items: center; margin: 0 0 14px; }
 
 /* Conteúdo embaixo do mapa */
@@ -552,7 +559,7 @@ button.metrica:hover .ir i { transform: translateX(3px); }
 .texto-lido textarea { min-height: 170px; font-size: 1.0625rem; line-height: 1.65; padding: 16px 18px; background: var(--cor-fundo); resize: none; overflow: hidden; }
 .acoes-texto { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 16px; }
 .acoes-texto .vazado.pequeno[aria-busy="true"] { opacity: .6; pointer-events: none; }
-.recentes-fonte { display: flex; flex-wrap: wrap; gap: 8px; }
+.recentes-fonte { display: flex; flex-wrap: wrap; gap: 8px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
 .recentes-fonte:empty { display: none; }
 .recentes-fonte button { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; padding: 8px 12px; border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-campo); font-size: .8125rem; font-weight: 650; color: var(--cor-texto-2); transition: border-color var(--velocidade); }
 .recentes-fonte button:hover { border-color: var(--cor-texto); }
@@ -852,6 +859,7 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
         <button data-pergunta="Me explica o que eu sei sobre hábitos">Me explica o que eu sei sobre hábitos<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
       </div>
       <div class="chat" id="chat" aria-live="polite"></div>
+      <div class="chat-achados" id="chat-achados"></div>
       <p class="chat-aviso"><i class="ti ti-lock" aria-hidden="true"></i>Só leitura da sua base</p>
       <form class="chat-caixa" id="form-chat">
         <textarea id="msg" rows="1" placeholder="O que quer lembrar?" aria-label="Mensagem"></textarea>
@@ -867,7 +875,7 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
         <h1 id="t-buscar">O que você quer lembrar?</h1>
       </div>
       <form class="busca" id="form-busca" role="search">
-        <input type="text" id="q" placeholder="Ex.: o que eu aprendi sobre casamento?" aria-label="Pergunta">
+        <input type="search" id="q" placeholder="Digite uma palavra, nome ou fonte" aria-label="Buscar na base" autocomplete="off">
         <button aria-label="Buscar"><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
       </form>
       <div class="sugestoes">
@@ -1150,9 +1158,13 @@ function fontesRecentes() {
     const f = (x.f || "").trim();
     if (!f || vistas.has(f.toLowerCase())) continue;
     vistas.add(f.toLowerCase()); lista.push(x);
-    if (lista.length === 3) break;
+    if (lista.length === 40) break;
   }
-  $("#recentes-fonte").innerHTML = lista.map(x => `<button type="button" data-fonte-recente="${x.id}"><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i><span>${esc(x.f)}</span></button>`).join("");
+  const caixa = $("#recentes-fonte");
+  caixa.style.maxHeight = ""; caixa.scrollTop = 0;
+  caixa.innerHTML = lista.map(x => `<button type="button" data-fonte-recente="${x.id}"><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i><span>${esc(x.f)}</span></button>`).join("");
+  /* mostra o espaço de 3; o resto aparece rolando dentro da caixa */
+  requestAnimationFrame(() => { const b = caixa.children[2]; if (b && caixa.children.length > 3) caixa.style.maxHeight = (b.getBoundingClientRect().bottom - caixa.getBoundingClientRect().top) + "px"; });
 }
 $("#recentes-fonte").addEventListener("click", e => {
   const b = e.target.closest("[data-fonte-recente]"); if (!b) return;
@@ -1730,24 +1742,33 @@ function desenharTempo() {
 }
 
 /* ---------- BUSCAR ---------- */
-const SINONIMOS = {vendas: ["venda", "vender", "cliente", "preço", "proposta", "oferta"], dinheiro: ["finanças", "dinheiro", "juros", "reserva", "caixa", "riqueza"], casamento: ["casamento", "relacionamento"], sono: ["sono", "dormir"], "hábitos": ["hábito", "hábitos", "ambiente"]};
-function buscar(q) {
-  q = q.trim(); const box = $("#resposta");
-  if (!q) { box.innerHTML = `<p class="erro" style="margin-top:16px">Escreva o que você quer lembrar.</p>`; return; }
-  const chave = Object.keys(SINONIMOS).find(k => q.toLowerCase().includes(k.replace("s", "")) || q.toLowerCase().includes(k));
-  const termos = chave ? SINONIMOS[chave] : q.toLowerCase().split(/\s+/).filter(t => t.length > 3);
-  const achou = D.filter(x => termos.some(t => textoTodo(x).toLowerCase().includes(t))).sort((a, b) => b.p - a.p);
-  if (!achou.length) { box.innerHTML = `<div class="vazio"><h2>Ainda não tem nada sobre isso.</h2><p class="sec">Quando você registrar, ele aparece aqui.</p><button class="link" data-ir="registrar">Registrar agora</button></div>`; return; }
-  const galhos = [...new Set(achou.map(x => x.c.slice(0, 2).join(" › ")))];
-  box.innerHTML = `<div class="resposta">
-    <span class="rotulo">Resposta</span>
-    <p class="texto">Você registrou <em>${achou.length} ${achou.length === 1 ? "coisa" : "coisas"}</em> sobre isso, em ${galhos.length === 1 ? "um galho" : galhos.length + " galhos"}. A mais importante: ${esc(achou[0].t.charAt(0).toLowerCase() + achou[0].t.slice(1))}</p>
-    <span class="sec">Na versão real, a IA escreve essa resposta juntando seus registros e mostra de onde tirou cada parte.</span>
-    <div class="bloco-topo" style="margin-top:14px;border-bottom-color:var(--cor-linha)"><h3>De onde veio</h3><span class="sec num">${achou.length}</span></div>
-    <div class="grade">${achou.map(itemBloco).join("")}</div></div>`;
+/* procura na base inteira, sem acento, qualquer pedaço de palavra (título, texto, galho, fonte, link).
+   todas = true: precisa ter todas as palavras (lupa); false: basta uma, ordena por quantas tem (assistente) */
+const semAcento = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const PARADAS_BUSCA = new Set("que com uma uns dos das nos nas pra por sem mas para como sobre isso esse essa este esta quando onde porque tambem muito voce eles elas minha meu tudo nada cada qual quais algo coisa coisas sabe lembra lembrar aprendi quero tenho explica".split(" "));
+function acharNaBase(q, todas = true) {
+  let termos = semAcento(q).split(/[^a-z0-9]+/).filter(Boolean);
+  if (!todas) termos = termos.filter(w => w.length > 2 && !PARADAS_BUSCA.has(w));
+  if (!termos.length) return [];
+  return D.map(x => {
+    const tit = semAcento(x.t), todo = semAcento(textoTodo(x) + " " + (x.f || "") + " " + (x.url || ""));
+    const tem = termos.filter(w => todo.includes(w));
+    if (todas ? tem.length < termos.length : !tem.length) return null;
+    return {x, n: tem.length * 3 + tem.filter(w => tit.includes(w)).length * 2 + tem.filter(w => semAcento(x.f).includes(w)).length + x.p * .1};
+  }).filter(Boolean).sort((a, b) => b.n - a.n).map(r => r.x);
 }
-$("#form-busca").onsubmit = e => { e.preventDefault(); buscar($("#q").value); };
-$("#q").oninput = () => { const e = $("#resposta .erro"); if (e) e.remove(); };
+function buscar(q) {
+  const box = $("#resposta");
+  if (!q.trim()) { box.innerHTML = ""; return; }
+  const achou = acharNaBase(q);
+  if (!achou.length) { box.innerHTML = `<div class="vazio"><h2>Ainda não tem nada sobre isso.</h2><p class="sec">Quando você registrar, ele aparece aqui.</p><button class="link" data-ir="registrar">Registrar agora</button></div>`; return; }
+  box.innerHTML = `<div class="resposta">
+    <div class="bloco-topo" style="border-bottom-color:var(--cor-linha)"><h3>${achou.length === 1 ? "1 conhecimento" : achou.length + " conhecimentos"}</h3><span class="sec">toque para ver completo</span></div>
+    <div class="grade">${achou.slice(0, 80).map(itemBloco).join("")}</div></div>`;
+}
+$("#form-busca").onsubmit = e => { e.preventDefault(); buscar($("#q").value); $("#q").blur(); };
+let esperaBusca;
+$("#q").oninput = () => { clearTimeout(esperaBusca); esperaBusca = setTimeout(() => buscar($("#q").value), 120); };
 $$("[data-q]").forEach(b => b.onclick = () => { $("#q").value = b.dataset.q; buscar(b.dataset.q); });
 
 /* ---------- ASSISTENTE: a IA responde só com a sua base ---------- */
@@ -1774,7 +1795,13 @@ async function perguntar(q) {
   } catch (e) { alvo.innerHTML = `<p class="erro">${esc(e.message)}</p>`; }
   alvo.scrollIntoView({block: "nearest", behavior: "smooth"});
 }
-$("#form-chat").onsubmit = e => { e.preventDefault(); perguntar($("#msg").value); $("#msg").value = ""; $("#msg").style.height = ""; };
+$("#form-chat").onsubmit = e => { e.preventDefault(); perguntar($("#msg").value); $("#msg").value = ""; $("#msg").style.height = ""; $("#chat-achados").innerHTML = ""; };
+let esperaChat;
+$("#msg").addEventListener("input", e => { clearTimeout(esperaChat); esperaChat = setTimeout(() => {
+  const achou = acharNaBase(e.target.value, false).slice(0, 3);
+  $("#chat-achados").innerHTML = achou.length ? `<span>Na sua base</span>` + achou.map(x => `<button type="button" data-abrir-item="${x.id}"><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i><b>${esc(x.t)}</b></button>`).join("") : "";
+  if (achou.length) window.scrollTo({top: document.documentElement.scrollHeight, behavior: "smooth"});
+}, 150); });
 $("#msg").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#form-chat").requestSubmit(); } });
 $("#msg").addEventListener("input", e => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 140) + "px"; });
 $$("[data-pergunta]").forEach(b => b.onclick = () => perguntar(b.dataset.pergunta));

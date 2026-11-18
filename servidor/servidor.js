@@ -90,6 +90,14 @@ async function api(req, res, url) {
     const b = base.tudo();
     return json(res, 200, { itens: b.itens, ligacoes: b.ligacoes, resumos: b.resumos, hoje: base.hoje(), ia: ia.temIA() });
   }
+  if (rota === 'POST /api/mesclar') {
+    /* juntar não perde nada: os originais ficam na lixeira; por isso o token também pode */
+    const { ids, ...campos } = await lerJson(req);
+    const x = Array.isArray(ids) ? base.mesclar(ids, campos) : null;
+    if (!x) throw erro('Mande pelo menos 2 ids existentes em "ids".', 400);
+    await base.salvar();
+    return json(res, 200, { item: x, ligados: base.ligacoesDe(x.id).map(base.porId) });
+  }
   if (rota === 'POST /api/registrar') return json(res, 200, await registrar(await lerJson(req)));
   if (rota === 'POST /api/revisar') {
     const d = await lerJson(req);
@@ -158,9 +166,9 @@ async function api(req, res, url) {
     const pergunta = String(d.pergunta || '').trim();
     if (!pergunta) throw erro('Escreva a pergunta.');
     const contexto = [...(d.historico || []).slice(-2).map((m) => m.texto), pergunta].join(' ');
-    let itens = base.buscar(contexto, 14);
+    let itens = base.buscar(contexto, 25);
     if (!itens.length) itens = [...base.tudo().itens].sort((a, b) => b.p - a.p).slice(0, 14);
-    return json(res, 200, await ia.responder(pergunta, d.historico, itens));
+    return json(res, 200, await ia.responder(pergunta, d.historico, itens, base.tudo().itens));
   }
   if (rota === 'GET /api/buscar') return json(res, 200, { itens: base.buscar(url.searchParams.get('q') || '', Number(url.searchParams.get('limite')) || 15) });
   if (rota === 'GET /api/arvore') return json(res, 200, { caminhos: base.caminhos(), total: base.tudo().itens.length });
