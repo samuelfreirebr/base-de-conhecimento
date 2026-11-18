@@ -41,7 +41,7 @@ export const ligacoesDe = (id) => base.ligacoes.filter((l) => l.includes(id)).ma
 const PARADAS = new Set('sobre para como mais isso esse essa este esta pelo pela quando quem onde porque entao tambem muito muita voce voces eles elas nosso nossa minha meu seus suas tudo nada cada qual quais algo alguma algum livro video coisa coisas sabe saber lembra lembrar aprendi quero tenho anotei resume resumo explica'.split(' '));
 const semAcento = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 export const palavras = (s) => [...new Set(semAcento(s).split(/[^a-z0-9]+/).filter((w) => w.length > 3 && !PARADAS.has(w)))];
-export const textoTodo = (x) => [x.t, x.c.join(' '), x.f, ...(x.corpo || []).map((b) => (typeof b === 'string' ? b : b.cit || b.nota || (b.lista || []).join(' ')))].join(' ');
+export const textoTodo = (x) => [x.t, x.c.join(' '), x.f, ...(x.corpo || []).map((b) => (typeof b === 'string' ? b : b.sec || b.cit || b.nota || (b.lista || []).join(' ')))].join(' ');
 
 export function buscar(consulta, limite = 15) {
   const ps = palavras(consulta);

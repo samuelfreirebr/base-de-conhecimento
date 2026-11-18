@@ -565,6 +565,8 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
 .item p, .previa-t, .conteudo-titulo, .corpo, .msg-texto, .caminho, .trechos .txt { overflow-wrap: anywhere; }
 
 /* Leitura do conhecimento */
+.corpo-sec { display: flex; align-items: center; gap: 8px; margin: 18px 0 0; padding-top: 20px; border-top: var(--linha) solid var(--cor-linha); font-size: 1rem; font-weight: 800; letter-spacing: -.015em; }
+.corpo-sec::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--cor-destaque); flex: none; }
 .foto-item { display: block; margin: 0 0 20px; max-width: 560px; }
 .foto-item img { display: block; width: 100%; border-radius: 14px; border: var(--linha) solid var(--cor-linha); }
 .acoes-item { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -876,8 +878,9 @@ async function carregarBase() {
   const d = await api("/api/base");
   D = d.itens; L = d.ligacoes; RESUMOS = d.resumos || {}; INFO = d.hoje; FILA = d.hoje.fila.slice();
 }
-const textoTodo = x => x.t + " " + x.c.join(" ") + " " + (x.corpo || []).map(b => typeof b === "string" ? b : b.cit || b.nota || (b.lista || []).join(" ")).join(" ");
+const textoTodo = x => x.t + " " + x.c.join(" ") + " " + (x.corpo || []).map(b => typeof b === "string" ? b : b.sec || b.cit || b.nota || (b.lista || []).join(" ")).join(" ");
 const corpoHtml = c => c.map(b => typeof b === "string" ? `<p>${esc(b)}</p>`
+  : b.sec ? `<h3 class="corpo-sec">${esc(b.sec)}</h3>`
   : b.cit ? `<figure class="trecho"><span class="rotulo">Trecho marcado</span><blockquote>${esc(b.cit)}</blockquote></figure>`
   : b.nota ? `<div class="nota"><span class="rotulo">Minha anotação</span><p>${esc(b.nota)}</p></div>`
   : b.lista ? `<ul>${b.lista.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` : "").join("");
@@ -1302,7 +1305,7 @@ function paginaGalho(cam, alvo = "#conteudo", inline = false) {
 let voltarPara = "hoje", navegou = false;
 /* copiar: título, texto e fonte, prontos para colar em qualquer lugar */
 function textoParaCopiar(x) {
-  const corpo = (x.corpo || []).map(b => typeof b === "string" ? b : b.cit ? `"${b.cit}"` : b.nota ? `Minha anotação: ${b.nota}` : (b.lista || []).map(i => "- " + i).join("\n")).join("\n\n");
+  const corpo = (x.corpo || []).map(b => typeof b === "string" ? b : b.sec ? b.sec.toUpperCase() : b.cit ? `"${b.cit}"` : b.nota ? `Minha anotação: ${b.nota}` : (b.lista || []).map(i => "- " + i).join("\n")).join("\n\n");
   return [x.t, corpo, `Fonte: ${x.f || NOME_ORIGEM[x.o] || "-"} · ${x.c.join(" > ")}`].filter(Boolean).join("\n\n");
 }
 async function copiarItem(x, botao) {

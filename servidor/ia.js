@@ -127,7 +127,7 @@ Regras:
 - Cite cada conhecimento usado no fim da frase como [#id].
 - Se nada abaixo responder a pergunta, diga que não encontrou isso na base e sugira registrar.
 - Formato: um parágrafo curto; se ajudar, uma lista com "- " no começo de cada item. Sem títulos, sem negrito.`;
-  const contexto = itens.map((x) => `#${x.id} | ${x.c.join(' > ')} | fonte: ${x.f || '-'} | prioridade ${x.p}\n${x.t}\n${(x.corpo || []).map((b) => (typeof b === 'string' ? b : b.cit ? 'Trecho: ' + b.cit : b.nota ? 'Anotação: ' + b.nota : (b.lista || []).map((i) => '- ' + i).join('\n'))).join('\n')}`).join('\n\n');
+  const contexto = itens.map((x) => `#${x.id} | ${x.c.join(' > ')} | fonte: ${x.f || '-'} | prioridade ${x.p}\n${x.t}\n${(x.corpo || []).map((b) => (typeof b === 'string' ? b : b.sec ? '\n' + b.sec + ':' : b.cit ? 'Trecho: ' + b.cit : b.nota ? 'Anotação: ' + b.nota : (b.lista || []).map((i) => '- ' + i).join('\n'))).join('\n')}`).join('\n\n');
   const conversa = (historico || []).slice(-6).map((m) => `${m.quem === 'eu' ? 'Samuel' : 'Assistente'}: ${m.texto}`).join('\n');
   const resposta = await chamar(`CONHECIMENTOS DA BASE:\n${contexto || '(nenhum encontrado)'}\n\n${conversa ? 'CONVERSA ATÉ AQUI:\n' + conversa + '\n\n' : ''}PERGUNTA: ${pergunta}`, { sistema, temperatura: 0.3 });
   const ids = [...new Set([...resposta.matchAll(/\[#(\d+)\]/g)].map((m) => Number(m[1])))];

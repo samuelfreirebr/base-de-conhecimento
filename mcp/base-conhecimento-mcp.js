@@ -37,7 +37,7 @@ async function api(caminho, metodo = 'GET', corpo) {
 }
 
 const texto = (x) => `#${x.id} · ${x.c.join(' > ')} · prioridade ${x.p} · ${x.f || 'sem fonte'} · ${x.d}\n${x.t}` +
-  ((x.corpo || []).length ? '\n' + x.corpo.map((b) => (typeof b === 'string' ? b : b.cit ? `Trecho: ${b.cit}` : b.nota ? `Anotação: ${b.nota}` : (b.lista || []).map((i) => `- ${i}`).join('\n'))).join('\n') : '');
+  ((x.corpo || []).length ? '\n' + x.corpo.map((b) => (typeof b === 'string' ? b : b.sec ? `\n${b.sec}:` : b.cit ? `Trecho: ${b.cit}` : b.nota ? `Anotação: ${b.nota}` : (b.lista || []).map((i) => `- ${i}`).join('\n'))).join('\n') : '');
 
 const FERRAMENTAS = [
   {
