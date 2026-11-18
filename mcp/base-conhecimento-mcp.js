@@ -83,11 +83,12 @@ const FERRAMENTAS = [
         fonte: { type: 'string', description: 'Livro e autor, vídeo, evento ou pessoa (opcional)' },
         origem: { type: 'string', enum: ['livro', 'video', 'evento', 'conversa', 'nota'], description: 'nota = ideia do próprio Samuel' },
         prioridade: { type: 'number', description: '1 a 5; omita para a IA sugerir' },
+        caminho: { type: 'array', items: { type: 'string' }, description: '[tema, galho, sub-galho opcional]; omita para a IA escolher. Use listar_temas antes para reaproveitar nomes.' },
       },
       required: ['texto'],
     },
-    rodar: async ({ texto: t, fonte, origem, prioridade }) => {
-      const d = await api('/api/registrar', 'POST', { texto: t, fonte, origem: origem || 'nota', prioridade, tipo: 'mcp' });
+    rodar: async ({ texto: t, fonte, origem, prioridade, caminho }) => {
+      const d = await api('/api/registrar', 'POST', { texto: t, fonte, origem: origem || 'nota', prioridade, caminho, tipo: 'mcp' });
       return `Registrado como #${d.item.id} em ${d.item.c.join(' > ')}${d.galhoNovo ? ' (galho novo)' : ''}, prioridade ${d.item.p}.` +
         (d.ligados.length ? `\nLigado a: ${d.ligados.filter(Boolean).map((x) => `#${x.id}`).join(', ')}` : '') + (d.aviso ? `\nAviso: ${d.aviso}` : '');
     },

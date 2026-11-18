@@ -55,6 +55,8 @@ async function registrar(d) {
     const frases = texto.split(/(?<=[.!?])\s+/);
     org = { titulo: frases[0].slice(0, 180), corpo: frases.length > 1 ? [texto] : [], caminho: ['Sem tema', 'Para organizar'], prioridade: 3, motivo: '', ligacoes: [], fonte: d.fonte || '' };
   }
+  /* quem registra pode fixar o caminho (MCP, importação); a IA continua escrevendo título, corpo e ligações */
+  if (Array.isArray(d.caminho) && d.caminho.filter(Boolean).length >= 2) org.caminho = d.caminho.filter(Boolean).map((s) => String(s).trim()).slice(0, 3);
   const escolhida = Number(d.prioridade);
   const item = base.adicionar({
     t: org.titulo, corpo: org.corpo, c: org.caminho, f: org.fonte || d.fonte || '',
