@@ -11,9 +11,10 @@ import { readFile, writeFile, rename, mkdir, copyFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { novoEstado, revisar, hojeISO } from './srs.js';
 
-const PASTA = process.env.PASTA_DADOS || new URL('../dados-local', import.meta.url).pathname;
-const ARQ = join(PASTA, 'base.json');
-export const PASTA_DADOS = PASTA;
+export const PASTA_DADOS = process.env.PASTA_DADOS || new URL('../dados-local', import.meta.url).pathname;
+const ARQ = join(PASTA_DADOS, 'base.json');
+export const ORIGENS = ['livro', 'video', 'evento', 'conversa', 'nota'];
+export const ehUrl = (u) => /^https?:\/\/\S+$/i.test(u);
 let base = { itens: [], ligacoes: [], resumos: {}, revisoes: {}, lixeira: [], proximoId: 1 };
 
 export async function carregar() {
@@ -25,9 +26,9 @@ export async function carregar() {
 let fila = Promise.resolve();
 export function salvar() {
   fila = fila.then(async () => {
-    await mkdir(PASTA, { recursive: true });
+    await mkdir(PASTA_DADOS, { recursive: true });
     await writeFile(ARQ + '.tmp', JSON.stringify(base));
-    await copyFile(ARQ, join(PASTA, 'base.anterior.json')).catch(() => {});
+    await copyFile(ARQ, join(PASTA_DADOS, 'base.anterior.json')).catch(() => {});
     await rename(ARQ + '.tmp', ARQ);
   }).catch((e) => console.error('salvar', e));
   return fila;
@@ -40,16 +41,16 @@ export const ligacoesDe = (id) => base.ligacoes.filter((l) => l.includes(id)).ma
 /* ---------- texto para busca ---------- */
 const PARADAS = new Set('sobre para como mais isso esse essa este esta pelo pela quando quem onde porque entao tambem muito muita voce voces eles elas nosso nossa minha meu seus suas tudo nada cada qual quais algo alguma algum livro video coisa coisas sabe saber lembra lembrar aprendi quero tenho anotei resume resumo explica que com uma uns dos das nos nas pra por sem mas foi ser ter tem vou sei the and'.split(' '));
 const semAcento = (s) => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-export const palavras = (s) => [...new Set(semAcento(s).split(/[^a-z0-9]+/).filter((w) => w.length > 2 && !PARADAS.has(w)))];
-export const textoTodo = (x) => [x.t, x.c.join(' '), x.f, ...(x.corpo || []).map((b) => (typeof b === 'string' ? b : b.sec || b.cit || b.nota || (b.lista || []).join(' ')))].join(' ');
+const palavras = (s) => [...new Set(semAcento(s).split(/[^a-z0-9]+/).filter((w) => w.length > 2 && !PARADAS.has(w)))];
+const textoTodo = (x) => [x.t, x.c.join(' '), x.f, ...(x.corpo || []).map((b) => (typeof b === 'string' ? b : b.sec || b.cit || b.nota || (b.lista || []).join(' ')))].join(' ');
 
 export function buscar(consulta, limite = 15) {
   const ps = palavras(consulta);
   if (!ps.length) return [];
   return base.itens
     .map((x) => {
-      const txt = semAcento(textoTodo(x));
-      const pontos = ps.reduce((n, w) => n + (txt.includes(w) ? 1 : 0) + (semAcento(x.t).includes(w) ? 1 : 0) + (semAcento(x.c.join(' ')).includes(w) ? 2 : 0), 0);
+      const txt = semAcento(textoTodo(x)), tit = semAcento(x.t), cam = semAcento(x.c.join(' '));
+      const pontos = ps.reduce((n, w) => n + (txt.includes(w) ? 1 : 0) + (tit.includes(w) ? 1 : 0) + (cam.includes(w) ? 2 : 0), 0);
       return { x, pontos: pontos + (pontos ? x.p * 0.1 : 0) };
     })
     .filter((r) => r.pontos > 0)
@@ -90,8 +91,8 @@ export function editar(id, campos) {
   if (Array.isArray(campos.corpo)) x.corpo = campos.corpo;
   if (Array.isArray(campos.c) && campos.c.length) x.c = campos.c.map(String);
   if (typeof campos.f === 'string') x.f = campos.f;
-  if (typeof campos.url === 'string') { const u = campos.url.trim(); if (/^https?:\/\/\S+$/i.test(u)) x.url = u; else if (!u) delete x.url; }
-  if (['livro', 'video', 'evento', 'conversa', 'nota'].includes(campos.o)) x.o = campos.o;
+  if (typeof campos.url === 'string') { const u = campos.url.trim(); if (ehUrl(u)) x.url = u; else if (!u) delete x.url; }
+  if (ORIGENS.includes(campos.o)) x.o = campos.o;
   if ([1, 2, 3, 4, 5].includes(Number(campos.p))) x.p = Number(campos.p);
   x.editado = new Date().toISOString();
   return x;

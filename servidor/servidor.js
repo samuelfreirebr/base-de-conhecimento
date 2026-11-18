@@ -8,10 +8,9 @@
 
 import { createServer } from 'node:http';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
-import { randomBytes } from 'node:crypto';
+import { randomBytes, createHash } from 'node:crypto';
 import { extname, join, normalize } from 'node:path';
 import * as seg from './seguranca.js';
-import { lerCorpo } from './multipart.js';
 import * as base from './dados.js';
 import * as ia from './ia.js';
 import { legendaDoYoutube, trechosDeTexto, textoDoDocx } from './fontes-externas.js';
@@ -26,17 +25,29 @@ function json(res, status, obj) {
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
   res.end(JSON.stringify(obj));
 }
+async function lerCorpo(req, limite) {
+  const pedacos = [];
+  let total = 0;
+  for await (const p of req) {
+    if ((total += p.length) > limite) throw erro('Arquivo grande demais.', 413);
+    pedacos.push(p);
+  }
+  return Buffer.concat(pedacos);
+}
 async function lerJson(req, limite = 2e6) {
   const b = await lerCorpo(req, limite);
   try { return JSON.parse(b.toString('utf8') || '{}'); } catch { throw erro('Dados inválidos.'); }
 }
-async function servirArquivo(res, caminho) {
+/* os arquivos do site não mudam dentro da imagem: ETag pelo conteúdo, 304 quando o navegador já tem */
+async function servirArquivo(req, res, caminho) {
   const alvo = normalize(join(SITE, caminho === '/' ? 'index.html' : caminho));
   if (!alvo.startsWith(SITE)) return json(res, 403, { erro: 'Proibido.' });
   try {
     const dado = await readFile(alvo);
     const ext = extname(alvo);
-    res.writeHead(200, { 'content-type': TIPOS[ext] || 'application/octet-stream', 'cache-control': ext === '.woff2' || ext === '.png' ? 'public, max-age=604800' : 'no-cache' });
+    const cab = { etag: '"' + createHash('sha1').update(dado).digest('base64url') + '"', 'cache-control': ext === '.woff2' || ext === '.png' ? 'public, max-age=604800' : 'no-cache' };
+    if (req.headers['if-none-match'] === cab.etag) { res.writeHead(304, cab); return res.end(); }
+    res.writeHead(200, { ...cab, 'content-type': TIPOS[ext] || 'application/octet-stream' });
     res.end(dado);
   } catch { json(res, 404, { erro: 'Não encontrado.' }); }
 }
@@ -61,9 +72,9 @@ async function registrar(d) {
   const escolhida = Number(d.prioridade);
   const item = base.adicionar({
     t: org.titulo, corpo: org.corpo, c: org.caminho, f: org.fonte || d.fonte || '',
-    o: ['livro', 'video', 'evento', 'conversa', 'nota'].includes(d.origem) ? d.origem : 'nota',
+    o: base.ORIGENS.includes(d.origem) ? d.origem : 'nota',
     tipo: d.tipo || 'texto', p: escolhida >= 1 && escolhida <= 5 ? escolhida : org.prioridade, pIA: org.prioridade,
-    extras: { ...(/^https?:\/\/\S+$/i.test(String(d.url || '').trim()) ? { url: String(d.url).trim() } : {}), ...(/^[a-f0-9]{24}\.jpg$/.test(d.imagem || '') ? { imagem: d.imagem } : {}) },
+    extras: { ...(base.ehUrl(String(d.url || '').trim()) ? { url: String(d.url).trim() } : {}), ...(/^[a-f0-9]{24}\.jpg$/.test(d.imagem || '') ? { imagem: d.imagem } : {}) },
   });
   org.ligacoes.forEach((id) => base.ligar(item.id, id));
   await base.salvar();
@@ -219,7 +230,7 @@ createServer(async (req, res) => {
       return res.end();
     }
     if (url.pathname === '/sair') { res.writeHead(303, { location: '/entrar.html', 'set-cookie': seg.cookieDeSaida() }); return res.end(); }
-    if (PUBLICOS.test(url.pathname)) return servirArquivo(res, url.pathname);
+    if (PUBLICOS.test(url.pathname)) return servirArquivo(req, res, url.pathname);
 
     if (!seg.liberado(req)) {
       if (url.pathname.startsWith('/api/')) return json(res, 401, { erro: 'Entre de novo.', entrar: true });
@@ -228,9 +239,9 @@ createServer(async (req, res) => {
     }
     if (url.pathname.startsWith('/api/')) return await api(req, res, url);
     if (req.method !== 'GET') return json(res, 405, { erro: 'Método não permitido.' });
-    return servirArquivo(res, url.pathname === '/' ? '/' : url.pathname);
+    return servirArquivo(req, res, url.pathname);
   } catch (e) {
     if (!e.status) console.error(e);
-    json(res, e.grande ? 413 : e.status || 500, { erro: e.status || e.grande ? e.message : 'Algo deu errado no servidor. Tente de novo.' });
+    json(res, e.status || 500, { erro: e.status ? e.message : 'Algo deu errado no servidor. Tente de novo.' });
   }
 }).listen(PORTA, process.env.HOSTNAME || '0.0.0.0', () => console.log(`Base de conhecimento na porta ${PORTA}`));

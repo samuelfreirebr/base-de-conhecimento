@@ -21,7 +21,7 @@ function agrupar(partes, tamanho = 650) {
 }
 
 /* ---------- YouTube ---------- */
-export function idDoYoutube(url) {
+function idDoYoutube(url) {
   const m = String(url).match(/(?:youtu\.be\/|v=|\/shorts\/|\/embed\/|\/live\/)([A-Za-z0-9_-]{11})/);
   return m ? m[1] : null;
 }

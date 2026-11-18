@@ -16,13 +16,13 @@ const TOKEN = () => process.env.TOKEN_API || '';
 const COOKIE = 'base';
 const DURACAO_MS = 60 * 24 * 60 * 60 * 1000;   // 60 dias: é um app de celular, não pode pedir senha toda hora
 
-export function iguais(a, b) {
+function iguais(a, b) {
   if (typeof a !== 'string' || typeof b !== 'string') return false;
   const A = Buffer.from(a), B = Buffer.from(b);
   return A.length === B.length && timingSafeEqual(A, B);
 }
 
-export const temSenha = () => Boolean(SENHA());
+const temSenha = () => Boolean(SENHA());
 export const senhaCerta = (s) => temSenha() && iguais(String(s || ''), SENHA());
 
 const chave = () => createHmac('sha256', 'sessao-da-base').update(SENHA()).digest();
