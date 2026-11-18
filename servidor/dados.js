@@ -91,6 +91,7 @@ export function editar(id, campos) {
   if (Array.isArray(campos.corpo)) x.corpo = campos.corpo;
   if (Array.isArray(campos.c) && campos.c.length) x.c = campos.c.map(String);
   if (typeof campos.f === 'string') x.f = campos.f;
+  if (typeof campos.orig === 'string') { if (campos.orig.trim()) x.orig = campos.orig.trim(); else delete x.orig; }
   if (typeof campos.url === 'string') { const u = campos.url.trim(); if (ehUrl(u)) x.url = u; else if (!u) delete x.url; }
   if (ORIGENS.includes(campos.o)) x.o = campos.o;
   if ([1, 2, 3, 4, 5].includes(Number(campos.p))) x.p = Number(campos.p);
@@ -108,7 +109,7 @@ export function mesclar(ids, { t, c, corpo, p }) {
     t: String(t || primeiro.t).trim(), c: Array.isArray(c) && c.length ? c.map(String) : primeiro.c,
     corpo: Array.isArray(corpo) && corpo.length ? corpo : orig.flatMap((x) => [{ sec: x.t }, ...(x.corpo || [])]),
     f: primeiro.f, o: primeiro.o, tipo: 'mesclado', p: [1, 2, 3, 4, 5].includes(Number(p)) ? Number(p) : Math.max(...orig.map((x) => x.p)),
-    extras: { ...(orig.find((x) => x.url) ? { url: orig.find((x) => x.url).url } : {}), mesclou: orig.map((x) => x.id) },
+    extras: { ...(orig.find((x) => x.url) ? { url: orig.find((x) => x.url).url } : {}), mesclou: orig.map((x) => x.id), ...(orig.some((x) => x.orig) ? { orig: orig.filter((x) => x.orig).map((x) => x.orig).join('\n\n* * *\n\n') } : {}) },
   });
   const fora = new Set(orig.map((x) => x.id));
   const vizinhos = new Set(base.ligacoes.filter((l) => l.some((i) => fora.has(i))).flat().filter((i) => !fora.has(i)));

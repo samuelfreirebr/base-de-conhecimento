@@ -478,6 +478,11 @@ button.barra:hover > span:first-child { color: var(--cor-destaque); }
 /* Tela de conteúdo */
 .voltar { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; padding: 9px 16px 9px 12px; border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-botao); margin-bottom: 26px; transition: border-color var(--velocidade); }
 .voltar:hover { border-color: var(--cor-texto); }
+.topo-conteudo { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-bottom: 26px; }
+.topo-conteudo .voltar { margin-bottom: 0; }
+.topo-conteudo [data-original][aria-pressed="true"] { border-color: var(--cor-destaque); color: var(--cor-destaque); }
+.rotulo-original { font-size: var(--tamanho-pequeno); font-weight: 700; color: var(--cor-secundaria); margin-bottom: 10px; }
+.texto-original { white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.7; }
 .voltar i { font-size: 18px; }
 .trilha-cam { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 14px; font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); }
 .trilha-cam > i { font-size: 14px; }
@@ -1228,6 +1233,16 @@ function visaoGeral() {
     <p class="sec" style="margin-top:14px">Toque num ponto do mapa ou num tema para ver tudo o que está dentro.</p>`;
 }
 const trilhaCam = cam => cam.map((p, i) => `<button class="link-caminho" data-abrir-galho="${esc(cam.slice(0, i + 1).join(">"))}">${esc(p)}</button>`).join('<i class="ti ti-chevron-right" aria-hidden="true"></i>');
+/* "Ver original": troca o texto organizado pelo texto como foi registrado (busca no servidor só quando pede) */
+async function alternarOriginal(b) {
+  const corpo = b.closest("#conteudo, #selecao-mapa").querySelector(".corpo"), x = porId(+b.dataset.original), ver = b.getAttribute("aria-pressed") !== "true";
+  if (!ver) { corpo.innerHTML = x.corpo ? corpoHtml(x.corpo) : `<p class="sec">Registrado só com esta frase.</p>`; }
+  else {
+    if (!x.orig) { b.setAttribute("aria-busy", "true"); try { x.orig = (await api(`/api/conhecimentos/${x.id}`)).item.orig || ""; } catch (er) { b.removeAttribute("aria-busy"); return; } b.removeAttribute("aria-busy"); }
+    corpo.innerHTML = `<p class="rotulo-original">Texto original, como foi registrado</p><div class="texto-original">${esc(x.orig)}</div>`;
+  }
+  b.setAttribute("aria-pressed", String(ver)); b.querySelector("span").textContent = ver ? "Ver organizado" : "Ver original";
+}
 const voltarBtn = `<button class="voltar" data-voltar><i class="ti ti-arrow-left" aria-hidden="true"></i>Voltar</button>`;
 function paginaItem(x, alvo = "#conteudo", inline = false) {
   const lig = ligacoes(x.id).map(porId).filter(Boolean);
@@ -1235,7 +1250,8 @@ function paginaItem(x, alvo = "#conteudo", inline = false) {
   const dt = new Date(x.d + "T12:00:00").toLocaleDateString("pt-BR", {day: "numeric", month: "short", year: "numeric"}).replace(".", "") + (horaCurta(x) ? ", " + horaCurta(x) : "");
   const dv = x.srs?.volta ? Math.round((new Date(x.srs.volta + "T12:00:00") - new Date().setHours(12, 0, 0, 0)) / 864e5) : null;
   const prox = dv === null ? "" : dv <= 0 ? "Hoje" : dv === 1 ? "Amanhã" : "Daqui a " + dv + " dias";
-  $(alvo).innerHTML = `${inline ? "" : voltarBtn}
+  const origBtn = x.temOrig || x.orig ? `<button class="voltar" data-original="${x.id}" aria-pressed="false"><i class="ti ti-file-text" aria-hidden="true"></i><span>Ver original</span></button>` : "";
+  $(alvo).innerHTML = `${inline ? (origBtn ? `<div class="topo-conteudo">${origBtn}</div>` : "") : `<div class="topo-conteudo">${voltarBtn}${origBtn}</div>`}
     <div class="conteudo-grade">
       <article class="leitura">
         <nav class="trilha-cam" aria-label="Galho">${trilhaCam(x.c)}</nav>
@@ -1383,6 +1399,7 @@ document.addEventListener("click", e => {
   const m = e.target.closest("[data-ver-mapa]"); if (m) { focoMapa = +m.dataset.verMapa; aba = "grafo"; ir("mapa"); return; }
   if (e.target.closest("[data-ir-arvore]")) { aba = "arvore"; ir("mapa"); return; }
   const edt = e.target.closest("[data-editar]"); if (edt) { abrirEdicao(porId(+edt.dataset.editar), edt.closest("#selecao-mapa") ? "#selecao-mapa" : "#conteudo"); return; }
+  const og = e.target.closest("[data-original]"); if (og) { alternarOriginal(og); return; }
   const cp = e.target.closest("[data-copiar]"); if (cp) { copiarItem(porId(+cp.dataset.copiar), cp); return; }
   const ap = e.target.closest("[data-apagar]"); if (ap) { apagarItem(porId(+ap.dataset.apagar)); return; }
   if (e.target.closest("[data-ir-revisao]")) { $("#revisao").scrollIntoView({behavior: "smooth", block: "center"}); return; }

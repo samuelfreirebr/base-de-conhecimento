@@ -74,7 +74,7 @@ async function registrar(d) {
     t: org.titulo, corpo: org.corpo, c: org.caminho, f: org.fonte || d.fonte || '',
     o: base.ORIGENS.includes(d.origem) ? d.origem : 'nota',
     tipo: d.tipo || 'texto', p: escolhida >= 1 && escolhida <= 5 ? escolhida : org.prioridade, pIA: org.prioridade,
-    extras: { ...(base.ehUrl(String(d.url || '').trim()) ? { url: String(d.url).trim() } : {}), ...(/^[a-f0-9]{24}\.jpg$/.test(d.imagem || '') ? { imagem: d.imagem } : {}) },
+    extras: { ...(base.ehUrl(String(d.url || '').trim()) ? { url: String(d.url).trim() } : {}), ...(/^[a-f0-9]{24}\.jpg$/.test(d.imagem || '') ? { imagem: d.imagem } : {}), orig: texto },
   });
   /* importação: data em que foi escrito (aaaa-mm-dd, nunca no futuro) */
   if (/^\d{4}-\d{2}-\d{2}$/.test(d.data || '') && d.data < item.d) { item.d = d.data; item.criado = d.data + 'T12:00:00'; }
@@ -101,7 +101,8 @@ async function api(req, res, url) {
 
   if (rota === 'GET /api/base') {
     const b = base.tudo();
-    return json(res, 200, { itens: b.itens, ligacoes: b.ligacoes, resumos: b.resumos, hoje: base.hoje(), ia: ia.temIA() });
+    /* o texto original fica fora da carga inicial (pesa); o app busca ao tocar em "Ver original" */
+    return json(res, 200, { itens: b.itens.map(({ orig, ...x }) => (orig ? { ...x, temOrig: true } : x)), ligacoes: b.ligacoes, resumos: b.resumos, hoje: base.hoje(), ia: ia.temIA() });
   }
   if (rota === 'POST /api/mesclar') {
     /* juntar não perde nada: os originais ficam na lixeira; por isso o token também pode */
