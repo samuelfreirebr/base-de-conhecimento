@@ -13,7 +13,8 @@ import { novoEstado, revisar, hojeISO } from './srs.js';
 
 const PASTA = process.env.PASTA_DADOS || new URL('../dados-local', import.meta.url).pathname;
 const ARQ = join(PASTA, 'base.json');
-let base = { itens: [], ligacoes: [], resumos: {}, revisoes: {}, proximoId: 1 };
+export const PASTA_DADOS = PASTA;
+let base = { itens: [], ligacoes: [], resumos: {}, revisoes: {}, lixeira: [], proximoId: 1 };
 
 export async function carregar() {
   try { base = { ...base, ...JSON.parse(await readFile(ARQ, 'utf8')) }; }
@@ -92,6 +93,17 @@ export function editar(id, campos) {
   if ([1, 2, 3, 4, 5].includes(Number(campos.p))) x.p = Number(campos.p);
   x.editado = new Date().toISOString();
   return x;
+}
+
+/* apagar = mandar para a lixeira (fica no arquivo, dá para recuperar) */
+export function apagar(id) {
+  const i = base.itens.findIndex((x) => x.id === Number(id));
+  if (i < 0) return null;
+  const [item] = base.itens.splice(i, 1);
+  const ligacoes = base.ligacoes.filter((l) => l.includes(item.id));
+  base.ligacoes = base.ligacoes.filter((l) => !l.includes(item.id));
+  (base.lixeira ||= []).push({ ...item, apagado: new Date().toISOString(), ligacoes });
+  return item;
 }
 
 /* ---------- Lembrar hoje ---------- */

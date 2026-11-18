@@ -7,7 +7,8 @@
    ============================================================ */
 
 import { createServer } from 'node:http';
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { randomBytes } from 'node:crypto';
 import { extname, join, normalize } from 'node:path';
 import * as seg from './seguranca.js';
 import { lerCorpo } from './multipart.js';
@@ -62,7 +63,7 @@ async function registrar(d) {
     t: org.titulo, corpo: org.corpo, c: org.caminho, f: org.fonte || d.fonte || '',
     o: ['livro', 'video', 'evento', 'conversa', 'nota'].includes(d.origem) ? d.origem : 'nota',
     tipo: d.tipo || 'texto', p: escolhida >= 1 && escolhida <= 5 ? escolhida : org.prioridade, pIA: org.prioridade,
-    extras: d.url ? { url: String(d.url) } : undefined,
+    extras: { ...(d.url ? { url: String(d.url) } : {}), ...(/^[a-f0-9]{24}\.jpg$/.test(d.imagem || '') ? { imagem: d.imagem } : {}) },
   });
   org.ligacoes.forEach((id) => base.ligar(item.id, id));
   await base.salvar();
@@ -111,6 +112,15 @@ async function api(req, res, url) {
     const r = await ia.lerFoto(`data:${tipo};base64,${img.toString('base64')}`, url.searchParams.get('marcado') === '1');
     return json(res, 200, r);
   }
+  if (rota === 'POST /api/imagem') {
+    /* a versão leve da foto (o app reduz antes de mandar), guardada para aparecer no conhecimento */
+    const img = await lerCorpo(req, 3e6);
+    if (img[0] !== 0xff || img[1] !== 0xd8) throw erro('Mande a imagem em JPEG.', 415);
+    const imagem = randomBytes(12).toString('hex') + '.jpg';
+    await mkdir(join(base.PASTA_DADOS, 'imagens'), { recursive: true });
+    await writeFile(join(base.PASTA_DADOS, 'imagens', imagem), img);
+    return json(res, 200, { imagem });
+  }
   if (rota === 'POST /api/arquivo') {
     const nome = decodeURIComponent(String(req.headers['x-nome'] || 'arquivo'));
     const bytes = await lerCorpo(req, 25e6);
@@ -152,6 +162,21 @@ async function api(req, res, url) {
     const x = base.porId(idRota[1]);
     if (!x) throw erro('Conhecimento não encontrado.', 404);
     return json(res, 200, { item: x, ligados: base.ligacoesDe(x.id).map(base.porId) });
+  }
+  const imgRota = url.pathname.match(/^\/api\/imagens\/([a-f0-9]{24}\.jpg)$/);
+  if (imgRota && req.method === 'GET') {
+    const dado = await readFile(join(base.PASTA_DADOS, 'imagens', imgRota[1])).catch(() => null);
+    if (!dado) throw erro('Imagem não encontrada.', 404);
+    res.writeHead(200, { 'content-type': 'image/jpeg', 'cache-control': 'private, max-age=31536000, immutable' });
+    return res.end(dado);
+  }
+  if (idRota && req.method === 'DELETE') {
+    /* apagar só pelo app (sessão); o MCP e outros sistemas não apagam */
+    if (!seg.peloApp(req)) throw erro('Apagar só pelo aplicativo.', 403);
+    const x = base.apagar(idRota[1]);
+    if (!x) throw erro('Conhecimento não encontrado.', 404);
+    await base.salvar();
+    return json(res, 200, { apagado: x.id });
   }
   if (idRota && req.method === 'PATCH') {
     const x = base.editar(idRota[1], await lerJson(req));

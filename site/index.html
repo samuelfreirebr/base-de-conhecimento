@@ -392,8 +392,9 @@ button.barra:hover > span:first-child { color: var(--cor-destaque); }
 .detalhe[hidden] { display: none; }
 .detalhe blockquote { margin: 0; font-size: 1.125rem; font-weight: 650; letter-spacing: -.018em; line-height: 1.42; max-width: 56ch; }
 .detalhe .resumo { font-size: .9875rem; color: var(--cor-texto-2); max-width: 62ch; }
-.no-texto { font-family: var(--fonte); font-size: 11px; font-weight: 700; fill: var(--cor-texto); pointer-events: none; paint-order: stroke; stroke: var(--cor-fundo-2); stroke-width: 4px; stroke-linejoin: round; }
+.no-texto { font-family: var(--fonte); font-size: 11px; font-weight: 700; fill: var(--cor-texto); pointer-events: none; stroke: none; stroke-linejoin: round; }
 .no-texto.tema { font-size: 13px; font-weight: 800; }
+.no-texto.halo { stroke: var(--cor-fundo-2); stroke-width: 4px; fill: var(--cor-fundo-2); }
 .sol-centro { font-family: var(--fonte); pointer-events: none; }
 
 /* ---------- TEMPO ---------- */
@@ -540,6 +541,13 @@ button.metrica:active { transform: scale(.985); }
 button.metrica:hover .ir i { transform: translateX(3px); }
 
 /* Leitura do conhecimento */
+.foto-item { display: block; margin: 0 0 20px; max-width: 560px; }
+.foto-item img { display: block; width: 100%; border-radius: 14px; border: var(--linha) solid var(--cor-linha); }
+.acoes-item { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vazado.pequeno { min-height: 44px; padding: 0 14px; font-size: .875rem; gap: 6px; }
+.vazado.pequeno i { font-size: 17px; }
+.link.apagar { justify-self: start; color: #B3261E; text-decoration-color: #F2B8B5; display: inline-flex; align-items: center; gap: 4px; }
+.link.apagar:hover { text-decoration-color: #B3261E; }
 .conteudo-titulo { font-size: clamp(1.375rem, 2.4vw, 1.875rem); line-height: 1.25; margin-bottom: 18px; max-width: 34ch; }
 .conteudo-titulo.menor { font-size: clamp(1.25rem, 2.2vw, 1.625rem); }
 .conteudo-grade { display: grid; gap: 26px; }
@@ -1029,12 +1037,12 @@ $("#btn-gravar").onclick = async () => {
 };
 
 /* Foto: reduz no aparelho e a IA lê só o marcado (ou tudo) */
-async function reduzirImagem(arquivo, max = 2000) {
+async function reduzirImagem(arquivo, max = 2000, qualidade = .88) {
   const img = await createImageBitmap(arquivo);
   const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas");
   c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
   c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-  return new Promise(r => c.toBlob(r, "image/jpeg", .88));
+  return new Promise(r => c.toBlob(r, "image/jpeg", qualidade));
 }
 async function lerFoto(arquivo) {
   const box = $("#previa-foto"); box.hidden = false;
@@ -1042,6 +1050,8 @@ async function lerFoto(arquivo) {
   const marcado = reg.marca === "sim";
   try {
     const d = await api("/api/foto?marcado=" + (marcado ? 1 : 0), {method: "POST", body: await reduzirImagem(arquivo), headers: {"content-type": "image/jpeg"}});
+    /* guarda uma versão leve (1280 px) só para mostrar; a de leitura não fica salva */
+    api("/api/imagem", {method: "POST", body: await reduzirImagem(arquivo, 1280, .72), headers: {"content-type": "image/jpeg"}}).then(r => reg.imagem = r.imagem).catch(() => {});
     if (d.fonte && !$("#origem-nome").value.trim()) $("#origem-nome").value = d.fonte;
     const n = d.trechos.length;
     const msg = !n ? (marcado ? "Não achei marcação nessa foto. Tente com mais luz ou escolha \"Não, tudo\"." : "Não consegui ler texto nessa foto.")
@@ -1099,7 +1109,7 @@ $("#btn-registrar").onclick = async () => {
   if (!texto) { erro.textContent = falta[reg.tipo]; return; }
   erro.textContent = ""; btn.setAttribute("aria-busy", "true"); btn.querySelector("span").textContent = "Organizando…";
   let d;
-  try { d = await api("/api/registrar", {method: "POST", json: {texto, tipo: reg.tipo, origem: reg.origem, fonte: $("#origem-nome").value.trim(), prioridade: reg.nivel, url: reg.tipo === "youtube" ? reg.yt?.url : undefined}}); }
+  try { d = await api("/api/registrar", {method: "POST", json: {texto, tipo: reg.tipo, origem: reg.origem, fonte: $("#origem-nome").value.trim(), prioridade: reg.nivel, url: reg.tipo === "youtube" ? reg.yt?.url : undefined, imagem: reg.tipo === "foto" ? reg.imagem : undefined}}); }
   catch (e) { erro.textContent = e.message; return; }
   finally { btn.removeAttribute("aria-busy"); btn.querySelector("span").textContent = "Registrar conhecimento"; }
   const novo = d.item; D.push(novo); d.ligados.forEach(x => x && L.push([novo.id, x.id]));
@@ -1125,7 +1135,7 @@ function limparRegistro() {
   ["#txt", "#origem-nome", "#yt-url", "#txt-audio"].forEach(s => $(s).value = "");
   ["#previa-foto", "#yt-trechos", "#arquivo-trechos", "#campo-transcricao"].forEach(s => $(s).hidden = true);
   $("#tempo-audio").textContent = "0:00"; $("#ajuda-audio").textContent = "Toque para gravar. Fale do seu jeito, a transcrição sai sozinha.";
-  reg.yt = null; window.scrollTo(0, 0);
+  reg.yt = null; reg.imagem = null; window.scrollTo(0, 0);
 }
 
 /* ---------- MAPA ---------- */
@@ -1177,6 +1187,7 @@ function paginaItem(x, alvo = "#conteudo", inline = false) {
       <article class="leitura">
         <nav class="trilha-cam" aria-label="Galho">${trilhaCam(x.c)}</nav>
         <h1 class="conteudo-titulo${inline ? " menor" : ""}">${esc(x.t)}</h1>
+        ${x.imagem ? `<a class="foto-item" href="/api/imagens/${x.imagem}" target="_blank" rel="noopener"><img src="/api/imagens/${x.imagem}" alt="Foto registrada com este conhecimento" loading="lazy"></a>` : ""}
         <div class="corpo">${x.corpo ? corpoHtml(x.corpo) : `<p class="sec">Registrado só com esta frase.</p>`}</div>
       </article>
       <aside class="ficha-lado">
@@ -1188,7 +1199,11 @@ function paginaItem(x, alvo = "#conteudo", inline = false) {
           <div><dt>Volta</dt><dd>${prox}</dd></div>
         </dl>
         <button class="botao" data-perguntar-sobre="${esc("Me explica melhor e liga com o que eu já sei: " + x.t)}"><span>Perguntar ao assistente</span><span class="seta"><i class="ti ti-brain" aria-hidden="true"></i></span></button>
-        ${inline ? "" : `<button class="link" style="justify-self:start" data-ver-mapa="${x.id}">Ver no mapa</button>`}
+        <div class="acoes-item">
+          <button class="vazado pequeno" data-copiar="${x.id}"><i class="ti ti-copy" aria-hidden="true"></i><span>Copiar</span></button>
+          ${inline ? "" : `<button class="vazado pequeno" data-ver-mapa="${x.id}"><i class="ti ti-topology-star-3" aria-hidden="true"></i>Ver no mapa</button>`}
+        </div>
+        <button class="link apagar" data-apagar="${x.id}"><i class="ti ti-trash" aria-hidden="true"></i> Apagar este conhecimento</button>
       </aside>
     </div>
     ${lig.length ? `<div class="bloco bloco-topo"><h2>Ligado a</h2><span class="sec num">${lig.length}</span></div><div class="grade">${lig.map(itemBloco).join("")}</div>` : ""}
@@ -1209,6 +1224,24 @@ function paginaGalho(cam, alvo = "#conteudo", inline = false) {
     <div class="grade">${itens.map(itemBloco).join("")}</div>`;
 }
 let voltarPara = "hoje", navegou = false;
+/* copiar: título, texto e fonte, prontos para colar em qualquer lugar */
+function textoParaCopiar(x) {
+  const corpo = (x.corpo || []).map(b => typeof b === "string" ? b : b.cit ? `"${b.cit}"` : b.nota ? `Minha anotação: ${b.nota}` : (b.lista || []).map(i => "- " + i).join("\n")).join("\n\n");
+  return [x.t, corpo, `Fonte: ${x.f || NOME_ORIGEM[x.o] || "-"} · ${x.c.join(" > ")}`].filter(Boolean).join("\n\n");
+}
+async function copiarItem(x, botao) {
+  const rot = botao.querySelector("span");
+  try { await navigator.clipboard.writeText(textoParaCopiar(x)); rot.textContent = "Copiado"; }
+  catch { rot.textContent = "Não deu"; }
+  setTimeout(() => rot.textContent = "Copiar", 1600);
+}
+async function apagarItem(x) {
+  if (!confirm(`Apagar "${x.t.slice(0, 80)}"?\n\nEle sai da base e do mapa. Fica guardado na lixeira do servidor, se precisar recuperar.`)) return;
+  try { await api(`/api/conhecimentos/${x.id}`, {method: "DELETE"}); }
+  catch (e) { alert(e.message); return; }
+  D = D.filter(y => y.id !== x.id); L = L.filter(l => !l.includes(x.id)); FILA = FILA.filter(id => id !== x.id);
+  if (telaAtual === "mapa") desenharMapa(); else ir(voltarPara === "conteudo" ? "hoje" : voltarPara);
+}
 function abrirDe(b) {
   const h = b.dataset.abrirItem ? "conteudo/" + b.dataset.abrirItem : "galho/" + encodeURIComponent(b.dataset.abrirGalho);
   if (telaAtual !== "conteudo") voltarPara = telaAtual;
@@ -1239,6 +1272,8 @@ document.addEventListener("click", e => {
   const q = e.target.closest("[data-perguntar-sobre]"); if (q) { ir("assistente"); perguntar(q.dataset.perguntarSobre); return; }
   const m = e.target.closest("[data-ver-mapa]"); if (m) { focoMapa = +m.dataset.verMapa; aba = "grafo"; ir("mapa"); return; }
   if (e.target.closest("[data-ir-arvore]")) { aba = "arvore"; ir("mapa"); return; }
+  const cp = e.target.closest("[data-copiar]"); if (cp) { copiarItem(porId(+cp.dataset.copiar), cp); return; }
+  const ap = e.target.closest("[data-apagar]"); if (ap) { apagarItem(porId(+ap.dataset.apagar)); return; }
   if (e.target.closest("[data-ir-revisao]")) { $("#revisao").scrollIntoView({behavior: "smooth", block: "center"}); return; }
   const b = e.target.closest("[data-abrir-item],[data-abrir-galho]"); if (b) abrirDe(b);
 });
@@ -1255,7 +1290,7 @@ function desenharMapa() {
   const g = svg.append("g");
   zoomAtual = d3.zoom().scaleExtent([.4, 5]).on("zoom", e => g.attr("transform", e.transform));
   svg.call(zoomAtual).on("dblclick.zoom", null);
-  $("#mapa-conta").innerHTML = `${D.length} conhecimentos<span class="so-pc-inline"> · ${new Set(D.map(x => x.c[0])).size} temas</span>`;
+  $("#mapa-conta").innerHTML = `${D.length} ${D.length === 1 ? "conhecimento" : "conhecimentos"}<span class="so-pc-inline"> · ${new Set(D.map(x => x.c[0])).size} temas</span>`;
   const cs = getComputedStyle(document.documentElement), cor = v => cs.getPropertyValue(v).trim();
   if (aba === "grafo") grafo(g, cor, W, H); else arvore(g, cor, W, H);
 }
@@ -1296,12 +1331,14 @@ function grafo(g, cor, W, H) {
   /* cérebro no centro */
   const centro = g.append("g").attr("pointer-events", "none");
   centro.append("text").attr("text-anchor", "middle").attr("dy", "0.36em").attr("font-family", "tabler-icons").attr("font-size", 38).attr("fill", "#fff").text("");
-  const rot = g.append("g").selectAll("text").data(nos.filter(n => n.depth && !n.data.item && (W >= 600 || n.depth < 3))).join("text").style("font-size", n => W < 600 && n.depth > 1 ? "10px" : null)
-    .attr("class", n => "no-texto" + (n.depth === 1 ? " tema" : ""))
+  const rotDados = nos.filter(n => n.depth && !n.data.item && (W >= 600 || n.depth < 3));
+  const fazRot = cls => g.append("g").selectAll("text").data(rotDados).join("text").style("font-size", n => W < 600 && n.depth > 1 ? "10px" : null)
+    .attr("class", n => "no-texto" + (n.depth === 1 ? " tema" : "") + cls)
     .attr("x", n => n.px + Math.cos(n.a) * (raio(n) + 6)).attr("y", n => n.py + Math.sin(n.a) * (raio(n) + 6))
     .attr("dy", "0.35em").attr("text-anchor", n => Math.cos(n.a) > .25 ? "start" : Math.cos(n.a) < -.25 ? "end" : "middle")
     .attr("dy", n => Math.abs(Math.cos(n.a)) <= .25 ? (Math.sin(n.a) > 0 ? "1em" : "-.4em") : "0.35em")
     .text(n => n.data.nome);
+  const rot = d3.selectAll([...fazRot(" halo").nodes(), ...fazRot("").nodes()]);
   const alvo = g.append("g").selectAll("circle").data(nos).join("circle")
     .attr("cx", n => n.px).attr("cy", n => n.py).attr("r", n => raio(n) + (n.data.item ? 7 : 10))
     .attr("fill", "transparent").style("cursor", "pointer");

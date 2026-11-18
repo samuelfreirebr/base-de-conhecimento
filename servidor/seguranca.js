@@ -59,6 +59,7 @@ function temBasic(req) {
   return senhaCerta(cru.slice(cru.indexOf(':') + 1));
 }
 
+export const peloApp = (req) => temSessao(req) || temBasic(req);
 export const liberado = (req) => temSessao(req) || temToken(req) || temBasic(req);
 
 const ehHttps = (req) => (req.headers['x-forwarded-proto'] || '').split(',')[0].trim() === 'https';
