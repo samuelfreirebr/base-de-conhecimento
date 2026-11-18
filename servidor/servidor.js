@@ -216,8 +216,9 @@ async function api(req, res, url) {
 await base.carregar();
 
 createServer(async (req, res) => {
-  const url = new URL(req.url, 'http://x');
+  let url;
   try {
+    url = new URL('http://x' + req.url); /* dentro do try: endereço estranho ("//", "*") não pode derrubar o servidor */
     if (url.pathname === '/estado') return json(res, 200, { ok: true });
 
     if (url.pathname === '/entrar' && req.method === 'POST') {
