@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#FFFFFF">
 <title>Base de conhecimento pessoal</title>
 <link rel="manifest" href="/manifest.webmanifest">
@@ -341,7 +341,7 @@ textarea:focus, input:focus { outline: none; border-color: var(--cor-texto); }
 body[data-tela="mapa"] main { max-width: none; }
 @media (min-width: 900px) { main { width: 100%; } }
 @media (min-width: 900px) { body[data-tela="mapa"] main { padding: 28px 28px 40px; } body[data-tela="mapa"] #tela-mapa .cabeca { margin-bottom: 14px; }  }
-.palco svg circle { touch-action: none; }
+@media (pointer: fine) { .palco svg circle { touch-action: none; } }
 .palco svg path, .palco svg circle { vector-effect: non-scaling-stroke; }
 .palco { position: relative; height: auto; aspect-ratio: 1 / 1.08; max-height: 64dvh; border-radius: var(--raio-bloco); margin: 0; background: var(--cor-fundo-2); overflow: hidden; touch-action: pan-y; }
 @media (min-width: 900px) { .palco { aspect-ratio: auto; max-height: none; height: max(440px, calc(100dvh - 300px)); margin: 0; border-radius: var(--raio-bloco); } }
@@ -557,6 +557,7 @@ button.metrica:hover .ir i { transform: translateX(3px); }
 
 /* Nada passa da largura da tela (grade sem "min-content" estourando) */
 html, body { overflow-x: clip; max-width: 100%; }
+html { touch-action: pan-x pan-y; }
 main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .resposta { min-width: 0; }
 .grade, .mes, .trilha, .conteudo-grade, .ideias { grid-template-columns: minmax(0, 1fr); }
 .item, .marco, .leitura, .ficha-lado, .texto-lido, .resposta, .msg, .pergunta, .comum, .painel, .campo, .previa, .cabeca, .detalhe { grid-template-columns: minmax(0, 1fr); }
@@ -1376,7 +1377,7 @@ function desenharMapa() {
   restaurarSelecao();
 }
 function grafo(g, cor, W, H) {
-  $("#dica-mapa").textContent = matchMedia("(pointer: coarse)").matches ? "Toque num ponto para ver. Dois dedos movem e dão zoom." : "Toque num ponto para ver. Arraste para mover, role para zoom.";
+  $("#dica-mapa").textContent = matchMedia("(pointer: coarse)").matches ? "Toque num ponto para ver. Dois dedos movem e dão zoom no mapa." : "Toque num ponto para ver. Puxe os pontos, arraste para mover, role para zoom.";
   /* Árvore radial: o cérebro no centro, temas em volta, galhos saindo, conhecimentos na borda */
   const raiz = d3.hierarchy(arvoreDados()).count().sort((a, b) => b.value - a.value);
   d3.tree().size([2 * Math.PI, 1]).separation((a, b) => (a.parent === b.parent ? 1 : 1.8) / Math.max(a.depth, 1))(raiz);
@@ -1437,7 +1438,7 @@ function grafo(g, cor, W, H) {
     centro.attr("transform", `translate(${raiz.px},${raiz.py})`);
   };
   let pesos = null, inicio = null, mola = null;
-  alvo.call(d3.drag()
+  if (!matchMedia("(pointer: coarse)").matches) alvo.call(d3.drag()
     .on("start", (e, n) => {
       if (mola) mola.stop();
       pesos = new Map();
@@ -1506,38 +1507,58 @@ function arvore(g, cor, W, H) {
     .attr("fill", corDe).attr("fill-opacity", d => visivel(d.atual) ? (d.data.item ? .95 : opac(d)) : 0)
     .attr("pointer-events", d => visivel(d.atual) ? "auto" : "none").attr("d", d => arco(d.atual)).style("cursor", "pointer");
   const nomeCurto = (s, n = 14) => s.length > n ? s.slice(0, Math.max(n - 1, 3)) + "…" : s;
-  /* rótulo corre ao longo do arco quando a fatia é larga, e pelo raio quando é estreita */
-  const tang = c => (c.x1 - c.x0) * (rad(c.y0) + rad(c.y1)) / 2 > (rad(c.y1) - rad(c.y0)) * 1.3;
-  const cabe = c => Math.max(3, Math.floor(((tang(c) ? (c.x1 - c.x0) * (rad(c.y0) + rad(c.y1)) / 2 : rad(c.y1) - rad(c.y0)) - 8) / 6.3));
-  const textos = g.append("g").attr("pointer-events", "none").attr("text-anchor", "middle").selectAll("text").data(raiz.descendants().slice(1)).join("text")
-    .attr("class", "no-texto").attr("dy", "0.35em").style("stroke", "none")
-    .attr("fill-opacity", d => +rotuloVisivel(d, d.atual)).attr("transform", d => posRotulo(d.atual)).text(d => nomeCurto(d.data.nome, cabe(d.atual)))
-    .style("fill", cor("--cor-texto"));
-  function rotuloVisivel(d, c) {
-    if (!(c.y1 <= 4.05 && c.y0 >= 1) || (comFora && d.data.item)) return false;
-    const larg = (c.x1 - c.x0) * (rad(c.y0) + rad(c.y1)) / 2, esp = rad(c.y1) - rad(c.y0);
-    if ((tang(c) ? esp : larg) < 13) return false;
-    const n = cabe(c); return d.data.nome.length <= n || n >= 8;
+  /* rótulos sempre na horizontal, em até 2 linhas e nunca cortados.
+     Se o nome não cabe na fatia, não aparece ali: tocando, ele aparece embaixo (e por fora no computador). */
+  const LETRA = 6.4, LINHA = 13;
+  const linhasDe = (nome, max) => {
+    if (nome.length * LETRA <= max) return [nome];
+    const ps = nome.split(" "); let melhor = null;
+    for (let k = 1; k < ps.length; k++) {
+      const a = ps.slice(0, k).join(" "), b = ps.slice(k).join(" "), w = Math.max(a.length, b.length) * LETRA;
+      if (w <= max && (!melhor || w < melhor.w)) melhor = {w, l: [a, b]};
+    }
+    return melhor ? melhor.l : null;
+  };
+  function encaixe(d, c) {
+    if (!(c.y1 <= 4.05 && c.y0 >= 1) || (comFora && d.data.item) || !(c.x1 > c.x0)) return null;
+    const a = (c.x0 + c.x1) / 2 - Math.PI / 2, r = (rad(c.y0) + rad(c.y1)) / 2;
+    const arcoLen = Math.min((c.x1 - c.x0) * r, 2 * r), esp = rad(c.y1) - rad(c.y0) - 4;
+    const sa = Math.abs(Math.sin(a)), ca = Math.abs(Math.cos(a));
+    const largura = sa * arcoLen + ca * esp - 8, altura = ca * arcoLen + sa * esp - 4;
+    const l = linhasDe(d.data.nome, largura);
+    return l && l.length * LINHA <= altura ? l : null;
   }
-  function posRotulo(c) { const x = (c.x0 + c.x1) / 2 * 180 / Math.PI, y = (rad(c.y0) + rad(c.y1)) / 2; return `rotate(${x - 90}) translate(${y},0) rotate(${tang(c) ? (x > 90 && x < 270 ? -90 : 90) : (x < 180 ? 0 : 180)})`; }
+  function posRotulo(c) { const a = (c.x0 + c.x1) / 2 - Math.PI / 2, r = (rad(c.y0) + rad(c.y1)) / 2; return `translate(${Math.cos(a) * r},${Math.sin(a) * r})`; }
+  function escrever(coord) {
+    textos.each(function (d) {
+      const l = encaixe(d, coord(d)) || [], t = d3.select(this);
+      t.selectAll("tspan").remove();
+      l.forEach((linha, k) => t.append("tspan").attr("x", 0).attr("dy", k ? "1.18em" : l.length === 1 ? "0.35em" : "-0.24em").text(linha));
+      t.attr("fill-opacity", l.length ? 1 : 0);
+    });
+  }
+  const textos = g.append("g").attr("pointer-events", "none").attr("text-anchor", "middle").selectAll("text").data(raiz.descendants().slice(1)).join("text")
+    .attr("class", "no-texto").style("stroke", "none").style("fill", cor("--cor-texto")).attr("transform", d => posRotulo(d.atual));
+  escrever(d => d.atual);
   const centro = g.append("circle").datum(raiz).attr("r", miolo - 2).attr("fill", cor("--cor-fundo")).style("cursor", "pointer");
   const ctxt = g.append("text").attr("class", "sol-centro").attr("text-anchor", "middle").attr("pointer-events", "none");
   const ct1 = ctxt.append("tspan").attr("x", 0).attr("dy", "-0.2em").attr("font-weight", 800).attr("font-size", 15).attr("fill", cor("--cor-texto"));
   const ct2 = ctxt.append("tspan").attr("x", 0).attr("dy", "1.4em").attr("font-size", 12).attr("font-weight", 600).attr("fill", cor("--cor-secundaria"));
   function rotCentro(p) { ct1.text(nomeCurto(p.depth ? p.data.nome : "Tudo")); const n = p.leaves().filter(l => l.data.item).length; ct2.text(n + (n === 1 ? " guardado" : " guardados")); }
   rotCentro(raiz);
+  let dentroDeGalho = false;
   function clicar(e, p) {
     e.stopPropagation();
     if (p.data.item) { previaItem(p.data.item); return; }
-    centro.datum(p.parent || raiz);
+    centro.datum(p.parent || raiz); dentroDeGalho = p.depth > 0;
     raiz.each(d => d.alvo = {x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI, x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI, y0: Math.max(0, d.y0 - p.depth), y1: Math.max(0, d.y1 - p.depth)});
     const t = g.transition().duration(550).ease(d3.easeCubicOut);
     caminhos.transition(t).tween("data", d => { const i = d3.interpolate(d.atual, d.alvo); return s => d.atual = i(s); })
       .filter(function (d) { return +this.getAttribute("fill-opacity") || visivel(d.alvo); })
       .attr("fill-opacity", d => visivel(d.alvo) ? (d.data.item ? .95 : opac({depth: d.depth - p.depth})) : 0)
       .attr("pointer-events", d => visivel(d.alvo) ? "auto" : "none").attrTween("d", d => () => arco(d.atual));
-    textos.filter(function (d) { return +this.getAttribute("fill-opacity") || rotuloVisivel(d, d.alvo); }).transition(t)
-      .attr("fill-opacity", d => +rotuloVisivel(d, d.alvo)).attrTween("transform", d => () => posRotulo(d.atual)).text(d => nomeCurto(d.data.nome, cabe(d.alvo)))
+    textos.attr("fill-opacity", 0).transition(t).attrTween("transform", d => () => posRotulo(d.atual));
+    setTimeout(() => escrever(d => d.alvo), 560);
     rotCentro(p);
     voltarArvore(p);
     if (p.depth) { const cam = []; let n = p; while (n.depth) { cam.unshift(n.data.nome); n = n.parent; } previaGalho(cam); } else limparSelecao();
@@ -1553,7 +1574,7 @@ function arvore(g, cor, W, H) {
   const quebrar = (t, n, max) => { const ls = []; let l = ""; t.split(" ").forEach(w => { if ((l + " " + w).trim().length > n) { ls.push(l.trim()); l = w; } else l += " " + w; }); ls.push(l.trim()); return ls.length > max ? ls.slice(0, max - 1).concat([ls[max - 1] + "…"]) : ls; };
   function desenharFora() {
     fora.selectAll("*").remove();
-    if (!comFora) return;
+    if (!comFora || !dentroDeGalho) return;
     const pos = d => d.alvo || d.atual;
     const folhas = raiz.descendants().filter(d => d.data.item && visivel(pos(d)) && pos(d).x1 - pos(d).x0 > .001);
     if (!folhas.length || folhas.length > 12) return;
@@ -1670,6 +1691,8 @@ $("#mic").onclick = async () => {
 carregarBase().then(rotear).catch(e => {
   $("main").innerHTML = `<div class="vazio"><h2>Não consegui abrir sua base.</h2><p class="sec">${esc(e.message)}</p><button class="botao" onclick="location.reload()"><span>Tentar de novo</span><span class="seta"><i class="ti ti-refresh" aria-hidden="true"></i></span></button></div>`;
 });
+/* sem zoom da página no iPhone (pinça e toque duplo); o zoom fica só dentro do mapa */
+["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), {passive: false}));
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 </script>
 </body>
