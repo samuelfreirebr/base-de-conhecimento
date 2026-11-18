@@ -1,0 +1,1547 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>Base de conhecimento pessoal</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="icon" href="/icone.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/icone-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Conhecimento">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+/* ============================================================
+   CENTRAL DE AJUSTES
+   Mude aqui as cores, tamanhos e espaços do app inteiro.
+   Identidade: Samuel Freire (laranja único, tinta, cinza).
+   Protótipo da etapa 1, com dados de exemplo.
+   ============================================================ */
+:root {
+  /* Cores */
+  --cor-destaque:        #FF4F18;  /* laranja: botão principal, tema, o que é essencial */
+  --cor-destaque-claro:  #FFF4F0;  /* laranja bem leve, só fundo */
+  --cor-texto:           #141517;  /* texto principal */
+  --cor-texto-2:         #3A3F45;  /* texto de apoio forte */
+  --cor-secundaria:      #5B6470;  /* texto secundário */
+  --cor-apagada:         #9AA3AF;  /* só desenho, nunca texto pequeno */
+  --cor-fundo:           #FFFFFF;
+  --cor-fundo-2:         #F2F4F7;  /* cinza da marca */
+  --cor-linha:           #E1E5EA;  /* linha fina */
+  --cor-linha-forte:     #DCE0E6;
+
+  /* Cor de cada origem (ícone), pela cor da marca de cada uma */
+  --cor-video:           #FF0033;  /* YouTube */
+  --cor-nota:            #F5B400;  /* ideia minha: lâmpada amarela */
+  --cor-conversa:        #25D366;  /* conversa: verde do WhatsApp */
+  --cor-livro:           #FF4F18;  /* livro: laranja da marca */
+  --cor-evento:          #2563EB;  /* evento */
+  --cor-foto:            #8B5CF6;
+  --cor-audio:           #0EA5E9;
+
+  /* Prioridade: do 0 (cinza) ao 5 (laranja forte) */
+  --p0: #DCE0E6;  --p1: #FFD9CB;  --p2: #FFB497;  --p3: #FF8C62;  --p4: #FF6A36;  --p5: #FF4F18;
+
+  /* Fonte */
+  --fonte: "Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --tamanho-titulo:      2.125rem;
+  --tamanho-titulo-2:    1.375rem;
+  --tamanho-destaque:    1.25rem;  /* texto do conhecimento no "Lembrar hoje" */
+  --tamanho-texto:       1rem;
+  --tamanho-pequeno:     .8125rem;
+  --tamanho-rotulo:      .6875rem;
+  --tamanho-metrica:     2.5rem;
+
+  /* Espaços */
+  --espaco-lateral:      20px;
+  --espaco-secao:        44px;
+  --espaco-item:         18px;
+  --altura-botao:        54px;
+  --largura-maxima:      1080px;
+  --largura-menu:        232px;    /* menu lateral no computador */
+  --altura-menu-celular: 68px;
+
+  /* Traço e tempo */
+  --linha:               1px;
+  --regua:               2px;      /* traço da aba e do menu */
+  --raio-botao:          100px;
+  --raio-midia:          5px;
+  --raio-bloco:          18px;     /* blocos e cartões */
+  --raio-campo:          12px;     /* campos, botões de escolha */
+  --velocidade:          .2s;
+  --curva:               cubic-bezier(.16, .84, .24, 1);
+}
+/* ============================================================ */
+
+@font-face { font-family: "Manrope"; src: url("fontes/manrope-latin.woff2") format("woff2"); font-weight: 200 800; font-display: swap; unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+2000-206F, U+2074, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD; }
+@font-face { font-family: "Manrope"; src: url("fontes/manrope-latin-ext.woff2") format("woff2"); font-weight: 200 800; font-display: swap; unicode-range: U+0100-02AF, U+0304, U+0308, U+0329, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF; }
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; font-family: var(--fonte); font-size: var(--tamanho-texto); line-height: 1.55; letter-spacing: -.011em; color: var(--cor-texto); background: var(--cor-fundo); -webkit-font-smoothing: antialiased; }
+::selection { background: var(--cor-destaque); color: #fff; }
+input, textarea { caret-color: var(--cor-destaque); }
+:focus-visible { outline: 2px solid var(--cor-destaque); outline-offset: 2px; }
+button { font: inherit; color: inherit; background: none; border: 0; padding: 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+h1, h2, h3, p { margin: 0; }
+h1 { font-size: var(--tamanho-titulo); font-weight: 800; letter-spacing: -.04em; line-height: 1.02; text-wrap: balance; }
+h2 { font-size: var(--tamanho-titulo-2); font-weight: 750; letter-spacing: -.028em; line-height: 1.15; }
+h3 { font-size: var(--tamanho-texto); font-weight: 700; letter-spacing: -.015em; }
+.num { font-variant-numeric: tabular-nums; }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* Rótulo com ponto laranja (identidade Samuel Freire) */
+.rotulo { display: inline-flex; align-items: center; gap: 8px; font-size: var(--tamanho-rotulo); font-weight: 650; letter-spacing: .16em; text-transform: uppercase; color: var(--cor-secundaria); }
+.rotulo::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--cor-destaque); }
+.sec { font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); }
+.caminho { font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); font-weight: 550; }
+.caminho b { color: var(--cor-texto); font-weight: 700; }
+
+/* ---------- Estrutura ---------- */
+.app { min-height: 100dvh; }
+.topo { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; justify-content: space-between; height: 56px; padding: 0 var(--espaco-lateral); padding-top: env(safe-area-inset-top); background: var(--cor-fundo); border-bottom: var(--linha) solid var(--cor-linha); }
+.marca { display: inline-flex; align-items: center; gap: 9px; font-weight: 800; letter-spacing: -.03em; font-size: 1.0625rem; }
+.marca i { width: 9px; height: 9px; background: var(--cor-destaque); display: inline-block; }
+.topo-acao { width: 40px; height: 40px; display: grid; place-items: center; font-size: 22px; margin-right: -8px; }
+main { padding: 28px var(--espaco-lateral) calc(var(--altura-menu-celular) + 48px + env(safe-area-inset-bottom)); max-width: var(--largura-maxima); margin: 0 auto; }
+.tela[hidden] { display: none !important; }
+.tela { animation: entra .28s var(--curva); }
+@keyframes entra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+/* Menu: barra de baixo no celular, lateral no computador */
+.menu { position: fixed; z-index: 30; left: 0; right: 0; bottom: 0; height: calc(var(--altura-menu-celular) + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); display: grid; grid-template-columns: repeat(5, 1fr); background: var(--cor-fundo); border-top: var(--linha) solid var(--cor-linha); }
+.menu button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 11px; font-weight: 650; color: var(--cor-secundaria); position: relative; }
+.menu button i { font-size: 23px; }
+.menu button[aria-current="page"] { color: var(--cor-texto); }
+.menu button[aria-current="page"]::after { content: ""; position: absolute; top: 0; left: 50%; width: 22px; height: var(--regua); margin-left: -11px; background: var(--cor-destaque); }
+.menu .mais i { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--cor-destaque); color: #fff; font-size: 26px; transition: transform var(--velocidade) var(--curva); }
+.menu .mais:active i { transform: scale(.94); }
+.menu .mais span { display: none; }
+.menu .longo { display: none; }
+.menu .so-pc { display: none; }
+@media (min-width: 900px) { .menu .so-pc { display: flex; } }
+@media (min-width: 900px) { .menu .longo { display: inline; } .menu .curto { display: none; } }
+.menu .mais[aria-current="page"]::after { display: none; }
+
+@media (min-width: 900px) {
+  .app { display: grid; grid-template-columns: var(--largura-menu) minmax(0, 1fr); }
+  .topo { display: none; }
+  .lateral { position: sticky; top: 0; height: 100dvh; border-right: var(--linha) solid var(--cor-linha); padding: 28px 18px; display: flex; flex-direction: column; gap: 32px; }
+  .menu { position: static; height: auto; display: flex; flex-direction: column; gap: 2px; border: 0; padding: 0; }
+  .menu button { flex-direction: row; justify-content: flex-start; gap: 12px; height: 44px; padding: 0 12px; font-size: 15px; font-weight: 600; border-radius: 8px; }
+  .menu button i { font-size: 20px; }
+  .menu button:hover { background: var(--cor-fundo-2); color: var(--cor-texto); }
+  .menu button[aria-current="page"] { background: var(--cor-fundo-2); }
+  .menu button[aria-current="page"]::after { top: 12px; left: 0; width: var(--regua); height: 20px; margin: 0; }
+  .menu .mais { order: -1; margin-bottom: 18px; height: 48px; background: var(--cor-texto); color: #fff; border-radius: var(--raio-botao); padding: 0 6px 0 18px; justify-content: space-between; }
+  .menu .mais:hover { background: var(--cor-destaque); color: #fff; }
+  .menu .mais span { display: inline; }
+  .menu .mais i { width: 36px; height: 36px; font-size: 20px; order: 2; }
+  .menu .mais:hover i { background: var(--cor-texto); }
+  .menu .mais[aria-current="page"] { background: var(--cor-destaque); }
+  main { padding: 48px 56px 80px; }
+  :root { --tamanho-titulo: 2.75rem; --tamanho-metrica: 3.25rem; }
+}
+.lateral { display: contents; }
+.lateral .marca, .lateral .rodape-lateral { display: none; }
+@media (min-width: 900px) { .lateral { display: flex; } .lateral .marca { display: inline-flex; align-items: baseline; padding-left: 12px; font-size: .9375rem; line-height: 1.25; } .lateral .marca i { flex: none; transform: translateY(-1px); } .lateral .rodape-lateral { display: block; margin-top: auto; padding: 0 12px; font-size: 12px; color: var(--cor-secundaria); } }
+
+/* ---------- Componentes ---------- */
+.botao { display: inline-flex; align-items: center; justify-content: space-between; gap: 16px; min-height: var(--altura-botao); padding: 0 7px 0 24px; border-radius: var(--raio-botao); background: var(--cor-texto); color: #fff; font-weight: 700; font-size: 1rem; letter-spacing: -.01em; transition: background var(--velocidade) var(--curva); }
+.botao .seta { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--cor-destaque); color: #fff; font-size: 20px; transition: transform var(--velocidade) var(--curva); }
+.botao:hover .seta { transform: rotate(-45deg); }
+.botao:hover { background: #000; }
+.botao.cheio { width: 100%; }
+.botao[aria-busy="true"] { opacity: .6; pointer-events: none; }
+.vazado { display: inline-flex; align-items: center; justify-content: center; gap: 10px; min-height: var(--altura-botao); padding: 0 24px; border-radius: var(--raio-botao); box-shadow: inset 0 0 0 1px var(--cor-texto); font-weight: 700; transition: background var(--velocidade), color var(--velocidade); }
+.vazado:hover { background: var(--cor-texto); color: #fff; }
+.link { font-weight: 650; font-size: var(--tamanho-pequeno); text-decoration: underline; text-underline-offset: 4px; text-decoration-thickness: 1px; text-decoration-color: var(--cor-linha-forte); }
+.link:hover { text-decoration-color: var(--cor-destaque); }
+.cabeca { display: grid; gap: 12px; margin-bottom: 32px; }
+.cabeca .sec { font-size: .9375rem; max-width: 52ch; }
+.bloco { margin-top: var(--espaco-secao); }
+.bloco-topo .link { white-space: nowrap; }
+.bloco-topo { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-bottom: 14px; border-bottom: var(--linha) solid var(--cor-linha); margin-bottom: 16px; }
+.cartao .bloco-topo { margin-bottom: 4px; }
+.prio { display: inline-flex; gap: 3px; vertical-align: middle; }
+.prio i { width: 4px; height: 12px; background: var(--cor-linha-forte); }
+.prio i.on { background: var(--pc, var(--cor-texto)); }
+.cor-video { color: var(--cor-video); } .cor-nota { color: var(--cor-nota); } .cor-conversa { color: var(--cor-conversa); } .cor-livro { color: var(--cor-livro); } .cor-evento { color: var(--cor-evento); } .cor-foto { color: var(--cor-foto); } .cor-audio { color: var(--cor-audio); }
+.lista { list-style: none; margin: 0; padding: 0; }
+.lista li { padding: var(--espaco-item) 0; border-bottom: var(--linha) solid var(--cor-linha); display: grid; gap: 6px; }
+.lista li .meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px 14px; font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); }
+.lista li .meta i.ti { font-size: 16px; vertical-align: -3px; margin-right: 4px; }
+.lista li p { font-size: .9875rem; color: var(--cor-texto); }
+.vazio { padding: 40px 0; display: grid; gap: 10px; justify-items: start; }
+
+/* ---------- HOJE ---------- */
+.metricas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: var(--espaco-secao); }
+@media (min-width: 1280px) { .metricas { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 14px; } }
+.metrica { min-width: 0; overflow: hidden; }
+.metrica { border: var(--linha) solid var(--cor-linha); border-radius: var(--raio-bloco); padding: 16px 16px 18px; display: grid; gap: 16px; align-content: space-between; min-height: 156px; background: var(--cor-fundo); }
+.metrica .tit { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; font-weight: 650; color: var(--cor-secundaria); }
+.metrica .tit i { font-size: 18px; color: var(--cor-texto); }
+.metrica .valor { display: flex; align-items: baseline; gap: 7px; line-height: 1; white-space: nowrap; }
+.metrica .valor strong { font-size: var(--tamanho-metrica); font-weight: 800; letter-spacing: -.045em; }
+.metrica .valor small { font-size: var(--tamanho-pequeno); font-weight: 650; color: var(--cor-secundaria); }
+.metrica.escuro { background: var(--cor-texto); border-color: var(--cor-texto); color: #fff; }
+.metrica.escuro .tit, .metrica.escuro .valor small { color: rgba(255,255,255,.72); }
+.metrica.escuro .tit i { color: var(--cor-destaque); }
+.metrica.escuro .link { color: #fff; text-decoration-color: var(--cor-destaque); }
+.mini-barras { display: flex; align-items: flex-end; gap: 3px; height: 30px; }
+.mini-barras i { flex: 1; background: var(--cor-texto); border-radius: 3px; min-height: 3px; }
+.mini-barras i:last-child { background: var(--cor-destaque); }
+.mini-faixa { display: flex; gap: 2px; height: 10px; border-radius: 99px; overflow: hidden; }
+.mini-faixa i { background: var(--cor-texto); }
+.mini-faixa i:first-child { background: var(--cor-destaque); }
+.mini-passos { display: flex; gap: 4px; align-items: center; }
+.mini-passos i { flex: 1; height: 6px; border-radius: 99px; background: rgba(255,255,255,.18); }
+.mini-passos i.on { background: var(--cor-destaque); }
+.mini-dias { display: grid; grid-template-columns: repeat(14, minmax(0, 1fr)); gap: 3px; }
+.mini-dias i { aspect-ratio: 1; border-radius: 3px; background: var(--cor-fundo-2); }
+.mini-dias i.on { background: var(--cor-texto); }
+.mini-dias i.hoje { background: var(--cor-destaque); }
+.cartao { border: var(--linha) solid var(--cor-linha); border-radius: var(--raio-bloco); padding: 18px 18px 6px; background: var(--cor-fundo); }
+@media (min-width: 900px) { .cartao { padding: 22px 24px 8px; } }
+.cartao .bloco-topo { border-bottom-color: var(--cor-linha); }
+.cartao > .lista > li:last-child, .cartao .lista:last-child > li:last-child { border-bottom: 0; }
+.revisao { background: var(--cor-fundo-2); border-radius: var(--raio-bloco); padding: 26px 22px 22px; display: grid; gap: 22px; }
+@media (min-width: 900px) {
+  .revisao { padding: 24px 28px; gap: 14px; }
+  .revisao blockquote { font-size: 1.125rem; max-width: 60ch; }
+  .revisao .aviso { min-height: 0; }
+  .revisao .revisao-botoes { grid-template-columns: repeat(2, 170px); margin-top: 4px; }
+  .revisao .revisao-botoes .botao, .revisao .revisao-botoes .vazado { min-height: 44px; font-size: .9375rem; }
+}
+.revisao-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.passos { display: flex; gap: 4px; }
+.passos i { width: 18px; height: var(--regua); background: var(--cor-linha-forte); }
+.passos i.feito { background: var(--cor-texto); }
+.passos i.agora { background: var(--cor-destaque); }
+.revisao blockquote { margin: 0; font-size: var(--tamanho-destaque); font-weight: 650; letter-spacing: -.02em; line-height: 1.38; max-width: 40ch; text-wrap: pretty; }
+.revisao .fonte { display: flex; gap: 8px; align-items: center; font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); }
+.revisao .fonte i { font-size: 17px; }
+.revisao-botoes { display: grid; grid-template-columns: 1fr 1.25fr; gap: 10px; }
+.revisao-botoes .botao { justify-content: center; padding: 0 20px; }
+.revisao-botoes .botao .seta { display: none; }
+.revisao .aviso { font-size: var(--tamanho-pequeno); color: var(--cor-texto-2); min-height: 20px; font-weight: 600; }
+.revisao .aviso i { color: var(--cor-destaque); vertical-align: -3px; font-size: 17px; }
+.revisao.fim { align-content: center; justify-items: start; }
+.cartao-sai { animation: sai .24s var(--curva) forwards; }
+@keyframes sai { to { opacity: 0; transform: translateX(-14px); } }
+.barras { display: grid; gap: 14px; padding-top: 18px; }
+.barra { display: grid; grid-template-columns: 112px minmax(0, 1fr) 28px; align-items: center; gap: 12px; font-size: .875rem; font-weight: 600; }
+.barra .trilho { height: 8px; background: var(--cor-fundo-2); border-radius: 99px; overflow: hidden; }
+.barra .trilho i { display: block; height: 100%; background: var(--cor-texto); transform-origin: left; animation: cresce .7s var(--curva) both; }
+.barra:first-child .trilho i { background: var(--cor-destaque); }
+.barra .num { text-align: right; color: var(--cor-secundaria); }
+@keyframes cresce { from { transform: scaleX(0); } }
+.duas { display: grid; gap: 0 14px; align-items: start; }
+.duas .bloco { margin-top: 14px; }
+@media (min-width: 900px) { .duas .bloco { margin-top: var(--espaco-secao); } }
+@media (min-width: 1280px) { .duas { grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr); } }
+
+/* ---------- REGISTRAR ---------- */
+.tipos { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-bloco); overflow: hidden; }
+.tipos button { display: grid; justify-items: center; gap: 6px; padding: 16px 4px 13px; font-size: 12px; font-weight: 700; color: var(--cor-texto-2); border-right: var(--linha) solid var(--cor-linha-forte); transition: background var(--velocidade), color var(--velocidade); }
+.tipos button:last-child { border-right: 0; }
+.tipos button i { font-size: 25px; }
+.tipos button:hover { background: var(--cor-fundo-2); }
+.tipos button[aria-pressed="true"] { background: var(--cor-texto); color: #fff; }
+.tipos button[aria-pressed="true"] i { color: var(--cor-destaque); }
+.tipos [data-tipo="youtube"] i { color: var(--cor-video); }
+.tipos [data-tipo="audio"] i { color: var(--cor-audio); }
+.tipos [data-tipo="foto"] i { color: var(--cor-foto); }
+.painel { padding: 26px 0 8px; display: grid; gap: 18px; }
+.painel[hidden] { display: none; }
+textarea, input[type=text], input[type=url] { width: 100%; font: inherit; font-size: 1rem; color: var(--cor-texto); background: var(--cor-fundo); border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-campo); padding: 14px 16px; transition: border-color var(--velocidade); }
+textarea { min-height: 180px; resize: vertical; line-height: 1.55; }
+textarea:focus, input:focus { outline: none; border-color: var(--cor-texto); }
+::placeholder { color: var(--cor-secundaria); opacity: 1; }
+.campo { display: grid; gap: 8px; }
+.campo > span { font-size: var(--tamanho-pequeno); font-weight: 700; }
+.pergunta { display: grid; gap: 10px; }
+.pergunta > span { font-weight: 700; font-size: .9875rem; }
+.escolha { display: grid; grid-template-columns: 1fr 1fr; border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-campo); overflow: hidden; }
+.escolha button { min-height: 52px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; border-right: var(--linha) solid var(--cor-linha-forte); }
+.escolha button:last-child { border-right: 0; }
+.escolha button[aria-pressed="true"] { background: var(--cor-texto); color: #fff; }
+.ajuda { font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); }
+.gravar { display: grid; justify-items: center; gap: 16px; padding: 28px 0 8px; }
+.gravar .botao-gravar { width: 96px; height: 96px; border-radius: 50%; background: var(--cor-destaque); color: #fff; font-size: 38px; display: grid; place-items: center; transition: transform var(--velocidade) var(--curva); }
+.gravar .botao-gravar:active { transform: scale(.95); }
+.gravar.ativo .botao-gravar { background: var(--cor-texto); }
+.gravar .tempo { font-size: 1.75rem; font-weight: 800; letter-spacing: -.03em; }
+.onda { display: flex; align-items: center; gap: 3px; height: 40px; }
+.onda i { width: 3px; height: 6px; background: var(--cor-linha-forte); }
+.gravar.ativo .onda i { background: var(--cor-texto); transition: height .07s linear; }
+@keyframes onda { 50% { height: 36px; } }
+.acoes-foto { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 560px) { .acoes-foto { grid-template-columns: 1fr 1fr; } }
+.acoes-foto label { cursor: pointer; }
+.previa { display: grid; gap: 14px; }
+.previa img { width: 100%; max-height: 320px; object-fit: cover; border-radius: var(--raio-midia); background: var(--cor-fundo-2); }
+.lendo { display: grid; gap: 10px; }
+.lendo i { height: 12px; background: var(--cor-fundo-2); animation: pisca 1s ease-in-out infinite alternate; }
+.lendo i:nth-child(2) { width: 82%; } .lendo i:nth-child(3) { width: 64%; }
+@keyframes pisca { to { background: var(--cor-linha-forte); } }
+.achado { font-size: var(--tamanho-pequeno); font-weight: 650; color: var(--cor-texto-2); display: flex; gap: 8px; align-items: flex-start; }
+.achado i { color: var(--cor-destaque); font-size: 18px; }
+.soltar { display: grid; justify-items: center; gap: 8px; padding: 36px 20px; border: var(--linha) dashed var(--cor-linha-forte); border-radius: var(--raio-bloco); text-align: center; cursor: pointer; }
+.soltar i { font-size: 32px; color: var(--cor-secundaria); }
+.soltar:hover { border-color: var(--cor-texto); }
+.linha-url { display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+@media (min-width: 560px) { .linha-url { grid-template-columns: minmax(0, 1fr) auto; } }
+.video { display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 14px; align-items: center; }
+.video .capa { aspect-ratio: 16/9; background: var(--cor-texto); border-radius: var(--raio-midia); display: grid; place-items: center; color: #fff; font-size: 22px; }
+.trechos-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-bottom: 12px; border-bottom: var(--linha) solid var(--cor-texto); }
+.trechos { list-style: none; margin: 0; padding: 0; }
+.trechos li { border-bottom: var(--linha) solid var(--cor-linha); }
+.trechos label { display: grid; grid-template-columns: 22px 44px minmax(0, 1fr); gap: 12px; padding: 14px 0; cursor: pointer; align-items: start; }
+.trechos input { appearance: none; width: 20px; height: 20px; border-radius: 6px; margin: 1px 0 0; border: 1.5px solid var(--cor-texto); display: grid; place-items: center; cursor: pointer; }
+.trechos input:checked { background: var(--cor-texto); }
+.trechos input:checked::after { content: ""; width: 9px; height: 5px; border-left: 2px solid var(--cor-destaque); border-bottom: 2px solid var(--cor-destaque); transform: rotate(-45deg) translate(1px, -1px); }
+.trechos .hora { font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); font-weight: 700; padding-top: 1px; }
+.trechos .txt { font-size: .9375rem; }
+.trechos li.fora .txt { color: var(--cor-secundaria); }
+.comum { margin-top: 30px; padding-top: 26px; border-top: var(--linha) solid var(--cor-linha); display: grid; gap: 26px; }
+.origens { display: flex; flex-wrap: wrap; gap: 4px 22px; }
+.origens button { padding: 6px 0; font-weight: 650; color: var(--cor-secundaria); border-bottom: var(--regua) solid transparent; }
+.origens button[aria-pressed="true"] { color: var(--cor-texto); border-bottom-color: var(--cor-destaque); }
+.niveis { display: grid; grid-template-columns: 1.3fr repeat(5, minmax(0, 1fr)); border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-campo); overflow: hidden; }
+.niveis button { min-height: 58px; display: grid; place-items: center; align-content: center; gap: 1px; font-weight: 800; font-size: 1.0625rem; border-right: var(--linha) solid var(--cor-linha-forte); }
+.niveis button small { font-size: 10px; font-weight: 650; color: var(--cor-secundaria); letter-spacing: .02em; }
+.niveis button:last-child { border-right: 0; }
+.niveis button[aria-pressed="true"] { background: var(--cor-texto); color: #fff; }
+.niveis button[aria-pressed="true"] small { color: rgba(255,255,255,.7); }
+.niveis button:last-child[aria-pressed="true"] { background: var(--cor-destaque); }
+.niveis button:first-child { font-size: .8125rem; }
+.erro { font-size: var(--tamanho-pequeno); color: #B3261E; font-weight: 650; min-height: 18px; }
+.resultado { display: grid; gap: 0; }
+.resultado ol { list-style: none; margin: 0; padding: 0; }
+.resultado > ol > li { display: grid; grid-template-columns: 26px minmax(0, 1fr); gap: 12px; padding: 18px 0; border-bottom: var(--linha) solid var(--cor-linha); opacity: .25; transition: opacity .3s; }
+.resultado > ol > li:last-child { border-bottom: 0; }
+.resultado > ol > li.ok { opacity: 1; }
+.resultado > ol > li > i { font-size: 20px; color: var(--cor-linha-forte); }
+.resultado > ol > li.ok > i { color: var(--cor-destaque); }
+.resultado > ol > li strong { display: block; font-weight: 700; }
+.resultado .det { font-size: .9375rem; color: var(--cor-texto-2); margin-top: 4px; }
+.novo-galho { display: inline-flex; align-items: center; gap: 6px; font-size: var(--tamanho-rotulo); font-weight: 750; letter-spacing: .12em; text-transform: uppercase; color: var(--cor-destaque); margin-left: 8px; }
+.novo-galho::before { content: ""; width: 7px; height: 7px; background: var(--cor-destaque); }
+.resultado-acoes { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 28px; }
+
+/* ---------- MAPA ---------- */
+.abas { display: inline-flex; gap: 26px; border-bottom: var(--linha) solid var(--cor-linha); margin-bottom: 18px; }
+.abas button { padding: 10px 0; font-weight: 700; color: var(--cor-secundaria); border-bottom: var(--regua) solid transparent; margin-bottom: -1px; }
+.abas button[aria-selected="true"] { color: var(--cor-texto); border-bottom-color: var(--cor-destaque); }
+.mapa-cabeca { display: flex; justify-content: space-between; align-items: flex-end; gap: 16px; flex-wrap: wrap; }
+.mapa-cabeca .cabeca { margin-bottom: 18px; }
+body[data-tela="mapa"] main { max-width: none; }
+@media (min-width: 900px) { main { width: 100%; } }
+@media (min-width: 900px) { body[data-tela="mapa"] main { padding: 28px 28px 40px; } body[data-tela="mapa"] #tela-mapa .cabeca { margin-bottom: 14px; }  }
+.palco { position: relative; height: auto; aspect-ratio: 1 / 1.08; max-height: 64dvh; border-radius: var(--raio-bloco); margin: 0; background: var(--cor-fundo-2); overflow: hidden; touch-action: none; }
+@media (min-width: 900px) { .palco { aspect-ratio: auto; max-height: none; height: max(440px, calc(100dvh - 300px)); margin: 0; border-radius: var(--raio-bloco); } }
+.palco svg { width: 100%; height: 100%; display: block; }
+.dica { display: block; margin: 10px 0 0; font-size: 11.5px; color: var(--cor-secundaria); font-weight: 600; }
+.zoom { position: absolute; right: 12px; top: 12px; display: grid; border-radius: var(--raio-campo); overflow: hidden; background: var(--cor-fundo); border: var(--linha) solid var(--cor-linha-forte); }
+.zoom button { width: 40px; height: 40px; display: grid; place-items: center; font-size: 19px; }
+.zoom button + button { border-top: var(--linha) solid var(--cor-linha-forte); }
+.legenda { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; margin-top: 4px; font-size: 11px; line-height: 1.4; color: var(--cor-secundaria); font-weight: 600; }
+.legenda span { gap: 5px; }
+.legenda i { width: 8px !important; height: 8px !important; }
+.fora-texto { font-family: var(--fonte); font-size: 12px; font-weight: 600; fill: var(--cor-texto); }
+.fora g:hover .fora-texto { fill: var(--cor-destaque); }
+.legenda span { display: inline-flex; align-items: center; gap: 7px; }
+.legenda i { display: inline-block; border-radius: 50%; }
+.detalhe { position: absolute; z-index: 3; left: 8px; right: 8px; bottom: 8px; max-height: 70%; overflow: auto; overscroll-behavior: contain; background: var(--cor-fundo); border: var(--linha) solid var(--cor-linha); border-radius: var(--raio-bloco); padding: 18px 18px 22px; display: grid; gap: 14px; align-content: start; animation: sobePainel .3s var(--curva); touch-action: pan-y; }
+@media (min-width: 900px) { .detalhe { left: auto; right: 12px; bottom: 12px; width: 400px; padding: 22px; } }
+@keyframes sobePainel { from { transform: translateY(24px); opacity: 0; } }
+@keyframes entraPainel { from { transform: translateX(24px); opacity: 0; } }
+.painel-c .fechar { position: sticky; top: 0; justify-self: end; width: 36px; height: 36px; margin: -4px -4px -40px 0; border-radius: 50%; background: var(--cor-fundo-2); display: grid; place-items: center; font-size: 18px; z-index: 1; }
+.painel-c .fechar:hover { background: var(--cor-texto); color: #fff; }
+.painel-c > .caminho { padding-right: 44px; }
+.painel-c .cheio { margin: 0; font-size: 1.1875rem; font-weight: 650; letter-spacing: -.018em; line-height: 1.45; text-wrap: pretty; }
+.ficha { margin: 0; display: grid; border-top: var(--linha) solid var(--cor-linha); }
+.ficha div { display: grid; grid-template-columns: 112px minmax(0, 1fr); gap: 10px; padding: 10px 0; border-bottom: var(--linha) solid var(--cor-linha); font-size: var(--tamanho-pequeno); }
+.ficha dt { color: var(--cor-secundaria); font-weight: 600; }
+.ficha dd { margin: 0; font-weight: 650; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ficha dd i.ti { font-size: 16px; }
+.painel-sub { font-size: .9375rem; margin-top: 6px; display: flex; justify-content: space-between; }
+.mini-lista { display: grid; gap: 8px; }
+.mini-item { text-align: left; border: var(--linha) solid var(--cor-linha); border-radius: var(--raio-campo); padding: 12px 14px; display: grid; gap: 4px; transition: border-color var(--velocidade); }
+.mini-item:hover { border-color: var(--cor-texto); }
+.mini-item .t { font-size: .9375rem; font-weight: 600; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.leitor { position: fixed; inset: 0; z-index: 60; }
+.leitor[hidden] { display: none; }
+.leitor-fundo { position: absolute; inset: 0; background: rgba(20, 21, 23, .38); animation: aparece .25s ease; }
+@keyframes aparece { from { opacity: 0; } }
+.leitor-caixa { position: absolute; left: 0; right: 0; bottom: 0; max-height: 88dvh; overflow: auto; overscroll-behavior: contain; background: var(--cor-fundo); border-radius: 22px 22px 0 0; padding: 22px 20px calc(28px + env(safe-area-inset-bottom)); display: grid; gap: 14px; align-content: start; animation: sobePainel .3s var(--curva); }
+@media (min-width: 900px) { .leitor-caixa { left: auto; top: 12px; right: 12px; bottom: 12px; width: 460px; max-height: none; border-radius: var(--raio-bloco); padding: 26px; animation-name: entraPainel; } }
+.abre { cursor: pointer; }
+.lista li.abre { position: relative; padding-right: 30px; }
+.lista li.abre::after { content: "\ea61"; font-family: "tabler-icons"; position: absolute; right: 0; top: 50%; transform: translateY(-50%); font-size: 18px; color: var(--cor-apagada); transition: transform var(--velocidade), color var(--velocidade); }
+.lista li.abre:hover::after { color: var(--cor-destaque); transform: translate(3px, -50%); }
+.lista li.abre:hover p, .item.abre:hover p { color: var(--cor-texto); }
+.item.abre:hover { border-color: var(--cor-texto); }
+.abre:focus-visible { outline-offset: 4px; border-radius: 8px; }
+button.barra { width: 100%; text-align: left; }
+button.barra:hover > span:first-child { color: var(--cor-destaque); }
+.mini-item .m { display: flex; justify-content: space-between; align-items: center; font-size: 12px; color: var(--cor-secundaria); }
+.detalhe[hidden] { display: none; }
+.detalhe blockquote { margin: 0; font-size: 1.125rem; font-weight: 650; letter-spacing: -.018em; line-height: 1.42; max-width: 56ch; }
+.detalhe .resumo { font-size: .9875rem; color: var(--cor-texto-2); max-width: 62ch; }
+.no-texto { font-family: var(--fonte); font-size: 11px; font-weight: 700; fill: var(--cor-texto); pointer-events: none; paint-order: stroke; stroke: var(--cor-fundo-2); stroke-width: 4px; stroke-linejoin: round; }
+.no-texto.tema { font-size: 13px; font-weight: 800; }
+.sol-centro { font-family: var(--fonte); pointer-events: none; }
+
+/* ---------- TEMPO ---------- */
+.meses { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); align-items: end; gap: 4px; height: 150px; padding-top: 10px; border-bottom: var(--linha) solid var(--cor-linha); }
+.meses button { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; gap: 6px; }
+.meses button i { display: block; background: var(--cor-texto); min-height: 2px; border-radius: 4px 4px 0 0; transform-origin: bottom; animation: sobe .7s var(--curva) both; }
+.meses button[aria-pressed="true"] i { background: var(--cor-destaque); }
+.meses button:hover i { background: var(--cor-texto-2); }
+.meses-nomes { display: grid; grid-template-columns: repeat(13, minmax(0, 1fr)); gap: 4px; margin-top: 8px; font-size: 10px; font-weight: 700; color: var(--cor-secundaria); text-align: center; text-transform: lowercase; }
+@keyframes sobe { from { transform: scaleY(0); } }
+.mes { display: grid; gap: 12px; margin-top: 30px; }
+.mes-lado { position: sticky; top: 56px; z-index: 5; background: var(--cor-fundo); padding: 12px 0 10px; display: flex; align-items: baseline; justify-content: space-between; gap: 12px; border-bottom: var(--linha) solid var(--cor-linha); }
+.mes-lado h3 { font-size: 1.25rem; font-weight: 800; letter-spacing: -.03em; }
+.mes-lado h3::first-letter { text-transform: uppercase; }
+.mes-lado h3 span { color: var(--cor-secundaria); font-weight: 600; margin-left: 6px; }
+.grade { display: grid; gap: 10px; }
+@media (min-width: 700px) { .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 900px) {
+  .mes { grid-template-columns: 170px minmax(0, 1fr); gap: 28px; margin-top: 36px; }
+  .mes-lado { top: 24px; align-self: start; display: grid; gap: 6px; padding: 4px 0 0; border: 0; }
+  .mes-lado h3 span { display: block; margin: 2px 0 0; font-size: .9375rem; }
+}
+.item { border: var(--linha) solid var(--cor-linha); border-radius: 14px; padding: 16px 16px 12px; display: grid; gap: 12px; align-content: start; background: var(--cor-fundo); transition: border-color var(--velocidade); }
+.item:hover { border-color: var(--cor-linha-forte); }
+.item-topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.item-dia { text-align: right; line-height: 1; flex: none; }
+.item-dia strong { display: block; font-size: 1.375rem; font-weight: 800; letter-spacing: -.04em; }
+.item-dia span { font-size: 11px; font-weight: 700; color: var(--cor-secundaria); text-transform: uppercase; letter-spacing: .08em; }
+.item p { font-size: 1rem; font-weight: 600; letter-spacing: -.012em; line-height: 1.45; }
+.item-rodape { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 11px; border-top: var(--linha) solid var(--cor-linha); font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); margin-top: auto; }
+.item-rodape > span:first-child { display: flex; align-items: center; gap: 6px; min-width: 0; }
+.item-rodape > span:first-child span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.item-rodape i.ti { font-size: 16px; flex: none; }
+
+/* ---------- BUSCAR ---------- */
+.busca { display: grid; grid-template-columns: minmax(0, 1fr) auto; border: var(--linha) solid var(--cor-texto); border-radius: var(--raio-campo); overflow: hidden; }
+.busca input { border: 0; border-radius: 0; font-size: 1.0625rem; padding: 18px; }
+.busca button { width: 58px; display: grid; place-items: center; font-size: 22px; background: var(--cor-texto); color: #fff; }
+.busca button:hover { background: var(--cor-destaque); }
+.sugestoes { display: flex; flex-wrap: wrap; gap: 6px 20px; margin-top: 16px; }
+.resposta { margin-top: 36px; display: grid; gap: 16px; }
+.resposta .texto { font-size: 1.125rem; font-weight: 600; letter-spacing: -.015em; line-height: 1.5; max-width: 60ch; }
+.resposta .texto em { font-style: normal; background: var(--cor-destaque-claro); box-shadow: 0 2px 0 var(--cor-destaque); }
+
+/* Linha do tempo em trilha */
+.filtro-temas { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 22px 0 4px; }
+.filtro-temas button { padding: 6px 0; font-weight: 650; color: var(--cor-secundaria); border-bottom: var(--regua) solid transparent; }
+.filtro-temas button[aria-pressed="true"] { color: var(--cor-texto); border-bottom-color: var(--cor-destaque); }
+.trilha { position: relative; display: grid; gap: 12px; padding-left: 58px; }
+.trilha::before { content: ""; position: absolute; left: 22px; top: 8px; bottom: 8px; width: 1px; background: var(--cor-linha-forte); }
+.marco { position: relative; display: grid; }
+.marco-dia { position: absolute; left: -58px; top: 12px; width: 45px; padding: 5px 0; text-align: center; line-height: 1; background: var(--cor-fundo); border: var(--linha) solid var(--cor-linha-forte); border-radius: 12px; }
+.marco-dia strong { display: block; font-size: 1.0625rem; font-weight: 800; letter-spacing: -.03em; }
+.marco-dia small { display: block; margin-top: 2px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--cor-secundaria); }
+.marco .marco-dia { border-color: var(--pc); border-width: 1.5px; }
+.marco.p5 .marco-dia strong { color: var(--cor-destaque); }
+.trilha .item-dia { display: none; }
+@media (min-width: 1000px) {
+  .trilha { padding-left: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 84px; row-gap: 14px; }
+  .trilha::before { left: 50%; }
+  .marco:nth-child(odd) { grid-column: 1; }
+  .marco:nth-child(even) { grid-column: 2; margin-top: 64px; }
+  .marco:nth-child(odd) .marco-dia { left: calc(100% + 19.5px); }
+  .marco:nth-child(even) .marco-dia { left: -64.5px; }
+}
+
+/* Assistente */
+.chat { display: grid; gap: 22px; padding-bottom: 20px; }
+.msg { display: grid; gap: 8px; max-width: 680px; }
+.msg-quem { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 700; color: var(--cor-secundaria); }
+.msg.ia .msg-quem::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--cor-destaque); }
+.msg.eu .msg-texto { background: var(--cor-fundo-2); border-radius: 16px; padding: 12px 16px; font-weight: 600; justify-self: start; }
+.msg.ia .msg-texto { font-size: 1rem; line-height: 1.6; display: grid; gap: 12px; }
+.msg.ia ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.msg.ia li::marker { color: var(--cor-destaque); }
+.digitando { display: inline-flex; gap: 5px; padding: 10px 0; }
+.digitando i { width: 7px; height: 7px; border-radius: 50%; background: var(--cor-apagada); animation: pula 1s ease-in-out infinite; }
+.digitando i:nth-child(2) { animation-delay: .15s; } .digitando i:nth-child(3) { animation-delay: .3s; }
+@keyframes pula { 50% { transform: translateY(-5px); background: var(--cor-texto); } }
+.ideias { display: grid; gap: 8px; margin-bottom: 18px; }
+.ideias[hidden] { display: none; }
+@media (min-width: 700px) { .ideias { grid-template-columns: 1fr 1fr; } }
+.ideias button { text-align: left; border: var(--linha) solid var(--cor-linha); border-radius: var(--raio-campo); padding: 14px 16px; font-weight: 600; font-size: .9375rem; display: flex; justify-content: space-between; align-items: center; gap: 12px; transition: border-color var(--velocidade); }
+.ideias button:hover { border-color: var(--cor-texto); }
+.ideias button i { color: var(--cor-destaque); font-size: 18px; flex: none; }
+.chat-caixa { position: sticky; bottom: calc(var(--altura-menu-celular) + env(safe-area-inset-bottom) + 10px); display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: end; gap: 6px; padding: 8px 8px 8px 16px; background: var(--cor-fundo); border: var(--linha) solid var(--cor-texto); border-radius: 18px; max-width: 760px; }
+@media (min-width: 900px) { .chat-caixa { bottom: 20px; } }
+.chat-caixa textarea { border: 0; padding: 10px 0; min-height: 0; height: 44px; max-height: 140px; resize: none; border-radius: 0; }
+.chat-caixa button { width: 44px; height: 44px; border-radius: 50%; background: var(--cor-destaque); color: #fff; display: grid; place-items: center; font-size: 20px; }
+.chat-caixa button:hover { background: var(--cor-texto); }
+.chat-caixa .mic { background: var(--cor-fundo-2); color: var(--cor-texto); }
+.chat-caixa .mic:hover { background: var(--cor-linha-forte); }
+.chat-caixa .mic.gravando { background: var(--cor-texto); color: var(--cor-destaque); animation: pulsa 1.2s ease-in-out infinite; }
+@keyframes pulsa { 50% { box-shadow: 0 0 0 6px rgba(255, 79, 24, .18); } }
+.ref { font-size: 11px; font-weight: 800; color: var(--cor-destaque); vertical-align: super; padding: 0 2px; }
+.chat-aviso { font-size: 12px; color: var(--cor-secundaria); display: flex; gap: 6px; align-items: center; margin: 0 0 14px; }
+
+/* Conteúdo embaixo do mapa */
+#selecao-mapa { margin-top: 30px; scroll-margin-top: 70px; animation: entra .3s var(--curva); }
+.conteudo-titulo.menor { font-size: clamp(1.375rem, 3vw, 1.875rem); margin-bottom: 20px; }
+.arvore-voltar { position: absolute; left: 12px; top: 12px; z-index: 2; display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px 9px 12px; background: var(--cor-fundo); border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-botao); font-weight: 700; font-size: .875rem; }
+.arvore-voltar:hover { border-color: var(--cor-texto); }
+.arvore-voltar[hidden] { display: none; }
+.palco:has(.arvore-voltar:not([hidden])) .dica { display: none; }
+
+/* Tela de conteúdo */
+.voltar { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; padding: 9px 16px 9px 12px; border: var(--linha) solid var(--cor-linha-forte); border-radius: var(--raio-botao); margin-bottom: 26px; transition: border-color var(--velocidade); }
+.voltar:hover { border-color: var(--cor-texto); }
+.voltar i { font-size: 18px; }
+.trilha-cam { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; margin-bottom: 14px; font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); }
+.trilha-cam > i { font-size: 14px; }
+.link-caminho { font-weight: 650; color: var(--cor-secundaria); text-decoration: underline; text-decoration-color: var(--cor-linha-forte); text-underline-offset: 4px; }
+.link-caminho:last-of-type { color: var(--cor-texto); }
+.link-caminho:hover { color: var(--cor-destaque); text-decoration-color: var(--cor-destaque); }
+.conteudo-titulo { font-size: clamp(1.625rem, 4.2vw, 2.5rem); font-weight: 750; letter-spacing: -.032em; line-height: 1.18; max-width: 30ch; margin-bottom: 28px; text-wrap: pretty; }
+.fichas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+@media (min-width: 1100px) { .fichas { grid-template-columns: repeat(5, minmax(0, 1fr)); } }
+.ficha-b { border: var(--linha) solid var(--cor-linha); border-radius: 14px; padding: 14px 16px; display: grid; gap: 7px; align-content: start; min-width: 0; }
+.ficha-b > span { font-size: 12px; font-weight: 650; color: var(--cor-secundaria); }
+.ficha-b strong { font-size: .9375rem; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.ficha-b strong i.ti { font-size: 19px; }
+.ficha-b.fonte { grid-column: span 2; }
+@media (min-width: 1100px) { .ficha-b.fonte { grid-column: auto; } }
+.ficha-b.prioridade { background: color-mix(in srgb, var(--pc) 12%, white); border-color: color-mix(in srgb, var(--pc) 55%, white); }
+.acoes-conteudo { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.resumo-bloco { background: var(--cor-destaque-claro); border: var(--linha) solid #FFD9CB; border-radius: var(--raio-bloco); padding: 20px 22px; display: grid; gap: 10px; margin-top: 4px; max-width: 820px; }
+.resumo-bloco p { font-size: 1.0625rem; font-weight: 600; line-height: 1.5; }
+.subs { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); }
+.sub-b { text-align: left; border: var(--linha) solid var(--cor-linha); border-radius: 14px; padding: 16px 40px 16px 16px; display: grid; gap: 4px; position: relative; transition: border-color var(--velocidade); }
+.sub-b:hover { border-color: var(--cor-texto); }
+.sub-b strong { font-weight: 750; }
+.sub-b span { font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); }
+.sub-b i { position: absolute; right: 14px; top: 17px; color: var(--cor-destaque); font-size: 18px; }
+.previa-t { font-size: 1rem; font-weight: 650; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; padding-right: 30px; }
+.previa-m { display: flex; align-items: center; gap: 6px 10px; flex-wrap: wrap; font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); }
+.previa-m i.ti { font-size: 17px; }
+/* blocos de número clicáveis */
+button.metrica { text-align: left; cursor: pointer; transition: border-color var(--velocidade), transform var(--velocidade) var(--curva); }
+button.metrica:hover { border-color: var(--cor-texto); }
+button.metrica:active { transform: scale(.985); }
+.metrica .ir { font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px; color: var(--cor-texto); }
+.metrica.escuro .ir { color: #fff; }
+.metrica .ir i { font-size: 15px; color: var(--cor-destaque); transition: transform var(--velocidade); }
+button.metrica:hover .ir i { transform: translateX(3px); }
+
+/* Leitura do conhecimento */
+.conteudo-titulo { font-size: clamp(1.375rem, 2.4vw, 1.875rem); line-height: 1.25; margin-bottom: 18px; max-width: 34ch; }
+.conteudo-titulo.menor { font-size: clamp(1.25rem, 2.2vw, 1.625rem); }
+.conteudo-grade { display: grid; gap: 26px; }
+@media (min-width: 1100px) { .conteudo-grade { grid-template-columns: minmax(0, 1fr) 300px; gap: 56px; align-items: start; } .ficha-lado { position: sticky; top: 24px; } }
+.leitura { max-width: 72ch; }
+.corpo { display: grid; gap: 16px; }
+.corpo > p { font-size: 1.0625rem; line-height: 1.75; color: var(--cor-texto-2); }
+.corpo ul { margin: 0; padding-left: 20px; display: grid; gap: 8px; font-size: 1.0625rem; line-height: 1.6; color: var(--cor-texto-2); }
+.corpo li::marker { color: var(--cor-destaque); }
+.trecho { margin: 4px 0; background: var(--cor-destaque-claro); border-radius: 16px; padding: 18px 20px; display: grid; gap: 8px; }
+.trecho blockquote { margin: 0; font-size: 1.125rem; font-weight: 650; line-height: 1.5; letter-spacing: -.012em; }
+.nota { background: var(--cor-fundo-2); border-radius: 16px; padding: 16px 20px; display: grid; gap: 6px; }
+.nota p { font-weight: 600; line-height: 1.55; }
+.ficha-lado { display: grid; gap: 12px; align-content: start; }
+.ficha-lado .botao { width: 100%; }
+.ficha-mini { margin: 0; border: var(--linha) solid var(--cor-linha); border-radius: 16px; padding: 2px 16px; }
+.ficha-mini div { display: grid; grid-template-columns: 82px minmax(0, 1fr); gap: 10px; padding: 11px 0; border-bottom: var(--linha) solid var(--cor-linha); font-size: var(--tamanho-pequeno); align-items: center; }
+.ficha-mini div:last-child { border-bottom: 0; }
+.ficha-mini dt { color: var(--cor-secundaria); font-weight: 600; }
+.ficha-mini dd { margin: 0; font-weight: 650; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; }
+.ficha-mini dd i.ti { font-size: 17px; }
+.item-resumo { font-size: var(--tamanho-pequeno); color: var(--cor-secundaria); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-top: -4px; }
+/* Mapa: cabeçalho enxuto para caber o conteúdo embaixo */
+.mapa-cabeca { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: center; gap: 10px 12px; margin-bottom: 12px; }
+#tela-mapa .mapa-cabeca h1 { grid-column: 1 / -1; font-size: 1.375rem; letter-spacing: -.03em; line-height: 1.15; }
+#mapa-conta { justify-self: end; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.so-pc-inline { display: none; }
+@media (min-width: 900px) { .so-pc-inline { display: inline; } }
+@media (min-width: 900px) { .mapa-cabeca { grid-template-columns: auto auto minmax(0, 1fr); gap: 0 20px; } #tela-mapa .mapa-cabeca h1 { grid-column: auto; font-size: 1.625rem; } }
+.segmento.abas { display: inline-flex; gap: 2px; padding: 3px; margin: 0; border: 0; background: var(--cor-fundo-2); border-radius: var(--raio-botao); }
+.segmento.abas button { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; margin: 0; border: 0; border-radius: var(--raio-botao); font-size: 13px; font-weight: 700; color: var(--cor-secundaria); transition: background var(--velocidade), color var(--velocidade); }
+.segmento.abas button i { font-size: 16px; }
+.segmento.abas button[aria-selected="true"] { background: var(--cor-texto); color: #fff; }
+.segmento.abas button[aria-selected="true"] i { color: var(--cor-destaque); }
+
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header class="topo">
+    <span class="marca"><i aria-hidden="true"></i>Base de conhecimento pessoal</span>
+    <button class="topo-acao" data-ir="buscar" aria-label="Buscar"><i class="ti ti-search" aria-hidden="true"></i></button>
+  </header>
+
+  <aside class="lateral">
+    <span class="marca"><i aria-hidden="true"></i>Base de conhecimento pessoal</span>
+    <nav class="menu" aria-label="Menu">
+      <button data-ir="hoje"><i class="ti ti-sun" aria-hidden="true"></i><span>Hoje</span></button>
+      <button data-ir="mapa"><i class="ti ti-topology-star-3" aria-hidden="true"></i><span>Mapa</span></button>
+      <button data-ir="registrar" class="mais" aria-label="Registrar"><i class="ti ti-plus" aria-hidden="true"></i><span>Registrar</span></button>
+      <button data-ir="tempo"><i class="ti ti-timeline" aria-hidden="true"></i><span><span class="curto">Tempo</span><span class="longo">Linha do tempo</span></span></button>
+      <button data-ir="assistente"><i class="ti ti-brain" aria-hidden="true"></i><span>Assistente</span></button>
+      <button data-ir="buscar" class="so-pc"><i class="ti ti-search" aria-hidden="true"></i><span>Buscar</span></button>
+    </nav>
+    <p class="rodape-lateral"><a class="link" href="/sair">Sair</a></p>
+  </aside>
+
+  <main>
+
+    <!-- ===================== HOJE ===================== -->
+    <section class="tela" id="tela-hoje" aria-labelledby="t-hoje">
+      <div class="cabeca">
+        <span class="rotulo" id="hoje-data">Hoje</span>
+        <h1 id="t-hoje">Bom dia, Samuel.</h1>
+      </div>
+
+      <div class="metricas" id="metricas"></div>
+
+      <div class="bloco-topo"><h2>Lembrar hoje</h2><span class="sec num" id="rev-conta"></span></div>
+      <div class="revisao" id="revisao" aria-live="polite"></div>
+
+      <div class="duas">
+        <div class="bloco cartao">
+          <div class="bloco-topo"><h2>Por tema</h2><span class="sec">conhecimentos</span></div>
+          <div class="barras" id="barras" style="padding-bottom:20px"></div>
+        </div>
+        <div class="bloco cartao">
+          <div class="bloco-topo"><h2>Últimos registros</h2><button class="link" data-ir="tempo">Ver todos</button></div>
+          <ul class="lista" id="recentes"></ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== REGISTRAR ===================== -->
+    <section class="tela" id="tela-registrar" aria-labelledby="t-reg" hidden>
+      <div id="reg-form">
+        <div class="cabeca">
+          <span class="rotulo">Registrar</span>
+          <h1 id="t-reg">O que você aprendeu?</h1>
+          <p class="sec">Mande do jeito mais rápido. A IA lê, escolhe o galho e liga com o que você já sabe.</p>
+        </div>
+
+        <div class="tipos" role="group" aria-label="Tipo de registro">
+          <button data-tipo="texto" aria-pressed="true"><i class="ti ti-align-left" aria-hidden="true"></i>Texto</button>
+          <button data-tipo="audio" aria-pressed="false"><i class="ti ti-microphone" aria-hidden="true"></i>Áudio</button>
+          <button data-tipo="foto" aria-pressed="false"><i class="ti ti-camera" aria-hidden="true"></i>Foto</button>
+          <button data-tipo="arquivo" aria-pressed="false"><i class="ti ti-paperclip" aria-hidden="true"></i>Arquivo</button>
+          <button data-tipo="youtube" aria-pressed="false"><i class="ti ti-brand-youtube" aria-hidden="true"></i>YouTube</button>
+        </div>
+
+        <!-- Texto -->
+        <div class="painel" data-painel="texto">
+          <label class="campo"><span>Seu insight</span>
+            <textarea id="txt" placeholder="Ex.: Antes de responder, repetir o que a pessoa disse. Ela se sente ouvida e a conversa esfria."></textarea>
+          </label>
+        </div>
+
+        <!-- Áudio -->
+        <div class="painel" data-painel="audio" hidden>
+          <div class="gravar" id="gravar">
+            <button class="botao-gravar" id="btn-gravar" aria-label="Começar a gravar"><i class="ti ti-microphone" aria-hidden="true"></i></button>
+            <div class="onda" aria-hidden="true"></div>
+            <span class="tempo num" id="tempo-audio">0:00</span>
+            <span class="ajuda" id="ajuda-audio">Toque para gravar. Fale do seu jeito, a transcrição sai sozinha.</span>
+          </div>
+          <label class="campo" id="campo-transcricao" hidden><span>Transcrição (pode corrigir)</span>
+            <textarea id="txt-audio"></textarea>
+          </label>
+        </div>
+
+        <!-- Foto -->
+        <div class="painel" data-painel="foto" hidden>
+          <div class="pergunta">
+            <span>Tem marcação no texto?</span>
+            <div class="escolha" role="group" aria-label="Tem marcação no texto">
+              <button data-marca="sim" aria-pressed="true"><i class="ti ti-highlight" aria-hidden="true"></i>Sim, só o marcado</button>
+              <button data-marca="nao" aria-pressed="false"><i class="ti ti-file-text" aria-hidden="true"></i>Não, tudo</button>
+            </div>
+            <p class="ajuda" id="ajuda-marca">Reconhece marca-texto de qualquer cor, caneta, lápis, sublinhado, colchete ou traço na margem, círculo e seta.</p>
+          </div>
+          <div class="acoes-foto">
+            <label class="botao"><span>Tirar foto</span><span class="seta"><i class="ti ti-camera" aria-hidden="true"></i></span>
+              <input type="file" accept="image/*" capture="environment" class="sr" id="foto-camera"></label>
+            <label class="vazado"><i class="ti ti-photo" aria-hidden="true"></i>Escolher da galeria
+              <input type="file" accept="image/*" class="sr" id="foto-galeria"></label>
+          </div>
+                    <div class="previa" id="previa-foto" hidden></div>
+        </div>
+
+        <!-- Arquivo -->
+        <div class="painel" data-painel="arquivo" hidden>
+          <label class="soltar">
+            <i class="ti ti-file-upload" aria-hidden="true"></i>
+            <strong>Escolher arquivo</strong>
+            <span class="ajuda">PDF, Word (.docx), texto, print ou anotação exportada do Kindle</span>
+            <input type="file" class="sr" id="arquivo" accept=".pdf,.docx,.txt,.md,.csv,image/*">
+          </label>
+          <div id="arquivo-trechos" hidden></div>
+        </div>
+
+        <!-- YouTube -->
+        <div class="painel" data-painel="youtube" hidden>
+          <div class="linha-url">
+            <input type="url" id="yt-url" placeholder="Cole o link do vídeo" inputmode="url">
+            <button class="vazado" id="yt-buscar"><i class="ti ti-download" aria-hidden="true"></i>Buscar transcrição</button>
+          </div>
+          <p class="erro" id="yt-erro" role="alert"></p>
+          <div id="yt-trechos" hidden></div>
+        </div>
+
+        <!-- Comum a todos -->
+        <div class="comum">
+          <div class="pergunta">
+            <span>De onde veio?</span>
+            <div class="origens" role="group" aria-label="Origem">
+              <button data-origem="livro" aria-pressed="true"><i class="ti ti-book-2 cor-livro" aria-hidden="true"></i> Livro</button>
+              <button data-origem="video" aria-pressed="false"><i class="ti ti-brand-youtube cor-video" aria-hidden="true"></i> Vídeo</button>
+              <button data-origem="evento" aria-pressed="false"><i class="ti ti-ticket cor-evento" aria-hidden="true"></i> Evento</button>
+              <button data-origem="conversa" aria-pressed="false"><i class="ti ti-message-circle cor-conversa" aria-hidden="true"></i> Conversa</button>
+              <button data-origem="nota" aria-pressed="false"><i class="ti ti-bulb cor-nota" aria-hidden="true"></i> Ideia minha</button>
+            </div>
+            <input type="text" id="origem-nome" placeholder="Nome do livro, vídeo ou pessoa (opcional)">
+          </div>
+
+          <div class="pergunta">
+            <span>Quanto isso importa para você?</span>
+            <div class="niveis" role="group" aria-label="Prioridade">
+              <button data-nivel="0" aria-pressed="true">IA decide<small>sugere</small></button>
+              <button data-nivel="1" aria-pressed="false">1<small>baixa</small></button>
+              <button data-nivel="2" aria-pressed="false">2<small>&nbsp;</small></button>
+              <button data-nivel="3" aria-pressed="false">3<small>média</small></button>
+              <button data-nivel="4" aria-pressed="false">4<small>&nbsp;</small></button>
+              <button data-nivel="5" aria-pressed="false">5<small>essencial</small></button>
+            </div>
+            <p class="ajuda">Quanto maior, mais vezes ele volta para você no "Lembrar hoje".</p>
+          </div>
+
+          <p class="erro" id="reg-erro" role="alert"></p>
+          <button class="botao cheio" id="btn-registrar"><span>Registrar conhecimento</span><span class="seta"><i class="ti ti-arrow-right" aria-hidden="true"></i></span></button>
+        </div>
+      </div>
+
+      <div id="reg-resultado" hidden></div>
+    </section>
+
+    <!-- ===================== MAPA ===================== -->
+    <section class="tela" id="tela-mapa" aria-labelledby="t-mapa" hidden>
+      <div class="mapa-cabeca">
+        <h1 id="t-mapa">Tudo que você já aprendeu</h1>
+        <div class="abas segmento" role="tablist">
+          <button role="tab" aria-selected="true" data-aba="grafo"><i class="ti ti-topology-star-3" aria-hidden="true"></i>Grafo</button>
+          <button role="tab" aria-selected="false" data-aba="arvore"><i class="ti ti-chart-donut-3" aria-hidden="true"></i>Árvore</button>
+        </div>
+        <span class="sec num" id="mapa-conta"></span>
+      </div>
+      <div class="palco" id="palco">
+        <svg id="svg-mapa" role="img" aria-label="Mapa do conhecimento"></svg>
+        <div class="detalhe painel-c" id="detalhe" hidden aria-live="polite"></div>
+        <button class="arvore-voltar" id="arvore-voltar" hidden><i class="ti ti-arrow-left" aria-hidden="true"></i><span></span></button>
+        <div class="zoom" id="zoom"><button aria-label="Aproximar" data-z="1.4"><i class="ti ti-plus" aria-hidden="true"></i></button><button aria-label="Afastar" data-z="0.7"><i class="ti ti-minus" aria-hidden="true"></i></button><button aria-label="Centralizar" data-z="0"><i class="ti ti-focus-centered" aria-hidden="true"></i></button></div>
+      </div>
+      <span class="dica" id="dica-mapa"></span>
+      <div class="legenda" id="legenda"></div>
+      <div id="selecao-mapa" aria-live="polite"></div>
+    </section>
+
+    <!-- ===================== TEMPO ===================== -->
+    <section class="tela" id="tela-tempo" aria-labelledby="t-tempo" hidden>
+      <div class="cabeca">
+        <span class="rotulo">Linha do tempo</span>
+        <h1 id="t-tempo">Quando você aprendeu cada coisa</h1>
+      </div>
+      <div class="cartao" style="padding-bottom:16px">
+        <div class="meses" id="meses" role="group" aria-label="Registros por mês"></div>
+        <div class="meses-nomes" id="meses-nomes" aria-hidden="true"></div>
+      </div>
+      <div class="filtro-temas" id="filtro-temas" role="group" aria-label="Filtrar por tema"></div>
+      <div id="tempo-lista"></div>
+    </section>
+
+    <!-- ===================== CONTEÚDO (tela inteira) ===================== -->
+    <section class="tela" id="tela-conteudo" hidden><div id="conteudo"></div></section>
+
+    <!-- ===================== ASSISTENTE ===================== -->
+    <section class="tela" id="tela-assistente" aria-labelledby="t-assist" hidden>
+      <div class="cabeca">
+        <span class="rotulo">Assistente</span>
+        <h1 id="t-assist">Pergunte para a sua base</h1>
+        <p class="sec">Ele lê tudo o que você registrou para te lembrar e explicar. Só consulta: não cria, não muda e não apaga nada.</p>
+      </div>
+      <div class="ideias" id="ideias">
+        <button data-pergunta="Quais são as coisas mais importantes que eu já registrei?">Quais são as coisas mais importantes que eu já registrei?<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+        <button data-pergunta="O que eu já aprendi sobre vendas?">O que eu já aprendi sobre vendas?<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+        <button data-pergunta="Tenho alguma coisa sobre saúde?">Tenho alguma coisa sobre saúde?<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+        <button data-pergunta="Me explica o que eu sei sobre hábitos">Me explica o que eu sei sobre hábitos<i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+      </div>
+      <div class="chat" id="chat" aria-live="polite"></div>
+      <p class="chat-aviso"><i class="ti ti-lock" aria-hidden="true"></i>Só leitura da sua base</p>
+      <form class="chat-caixa" id="form-chat">
+        <textarea id="msg" rows="1" placeholder="O que quer lembrar?" aria-label="Mensagem"></textarea>
+        <button type="button" class="mic" id="mic" aria-label="Falar a pergunta"><i class="ti ti-microphone" aria-hidden="true"></i></button>
+        <button aria-label="Enviar"><i class="ti ti-arrow-up" aria-hidden="true"></i></button>
+      </form>
+    </section>
+
+    <!-- ===================== BUSCAR ===================== -->
+    <section class="tela" id="tela-buscar" aria-labelledby="t-buscar" hidden>
+      <div class="cabeca">
+        <span class="rotulo">Buscar</span>
+        <h1 id="t-buscar">O que você quer lembrar?</h1>
+      </div>
+      <form class="busca" id="form-busca" role="search">
+        <input type="text" id="q" placeholder="Ex.: o que eu aprendi sobre casamento?" aria-label="Pergunta">
+        <button aria-label="Buscar"><i class="ti ti-arrow-right" aria-hidden="true"></i></button>
+      </form>
+      <div class="sugestoes">
+        <button class="link" data-q="casamento">casamento</button>
+        <button class="link" data-q="vendas">como vender melhor</button>
+        <button class="link" data-q="sono">sono</button>
+        <button class="link" data-q="hábitos">hábitos</button>
+        <button class="link" data-q="dinheiro">dinheiro</button>
+      </div>
+      <div id="resposta" aria-live="polite"></div>
+    </section>
+
+  </main>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.9.0/d3.min.js"></script>
+<script>
+/* ============================================================
+   DADOS DE EXEMPLO (na etapa 2 vêm do servidor)
+   caminho = tema > galho > sub-galho, montado pela IA
+   ============================================================ */
+/* ---------- Dados: vêm do servidor (/api/base) ---------- */
+let D = [], L = [], FILA = [], RESUMOS = {}, INFO = {sequencia: 0, ultimos14: Array(14).fill(0), feitosHoje: 0};
+let HOJE = new Date();
+async function api(caminho, op = {}) {
+  const r = await fetch(caminho, {method: op.method || "GET", headers: {...(op.json ? {"content-type": "application/json"} : {}), ...(op.headers || {})}, body: op.json ? JSON.stringify(op.json) : op.body});
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { location.href = "/entrar.html"; throw new Error("Entre de novo."); }
+  if (!r.ok) throw new Error(d.erro || "Não consegui falar com o servidor. Confira a internet e tente de novo.");
+  return d;
+}
+async function carregarBase() {
+  const d = await api("/api/base");
+  D = d.itens; L = d.ligacoes; RESUMOS = d.resumos || {}; INFO = d.hoje; FILA = d.hoje.fila.slice();
+}
+const textoTodo = x => x.t + " " + x.c.join(" ") + " " + (x.corpo || []).map(b => typeof b === "string" ? b : b.cit || b.nota || (b.lista || []).join(" ")).join(" ");
+const corpoHtml = c => c.map(b => typeof b === "string" ? `<p>${esc(b)}</p>`
+  : b.cit ? `<figure class="trecho"><span class="rotulo">Trecho marcado</span><blockquote>${esc(b.cit)}</blockquote></figure>`
+  : b.nota ? `<div class="nota"><span class="rotulo">Minha anotação</span><p>${esc(b.nota)}</p></div>`
+  : b.lista ? `<ul>${b.lista.map(i => `<li>${esc(i)}</li>`).join("")}</ul>` : "").join("");
+const primeiroTexto = x => (x.corpo || []).find(b => typeof b === "string") || "";
+const ICONE = {livro:"ti-book-2", video:"ti-brand-youtube", evento:"ti-ticket", conversa:"ti-message-circle", nota:"ti-bulb", foto:"ti-camera", audio:"ti-microphone"};
+const NOME_ORIGEM = {livro:"Livro", video:"Vídeo", evento:"Evento", conversa:"Conversa", nota:"Ideia minha"};
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const porId = id => D.find(x => x.id === id);
+const esc = s => String(s).replace(/[&<>"]/g, m => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[m]));
+const caminho = c => c.map((p, i) => i === c.length - 1 ? `<b>${esc(p)}</b>` : esc(p)).join(" › ");
+const prio = p => `<span class="prio" style="--pc:var(--p${p})" aria-label="Prioridade ${p} de 5">${[1,2,3,4,5].map(n => `<i class="${n <= p ? "on" : ""}"></i>`).join("")}</span>`;
+const dataCurta = d => new Date(d + "T12:00:00").toLocaleDateString("pt-BR", {day:"numeric", month:"short"}).replace(".", "");
+const ligacoes = id => L.filter(l => l.includes(id)).map(l => l[0] === id ? l[1] : l[0]);
+const itemBloco = x => { const d = new Date(x.d + "T12:00:00"); return `<article class="item abre" data-abrir-item="${x.id}" tabindex="0" role="button"><div class="item-topo"><span class="caminho">${caminho(x.c)}</span><span class="item-dia"><strong class="num">${d.getDate()}</strong><span>${d.toLocaleDateString("pt-BR", {month: "short"}).replace(".", "")}</span></span></div><p>${esc(x.t)}</p>${x.corpo ? `<span class="item-resumo">${esc(primeiroTexto(x))}</span>` : ""}<div class="item-rodape"><span><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i><span>${esc(x.f)}</span></span>${prio(x.p)}</div></article>`; };
+const itemLista = x => `<li class="abre" data-abrir-item="${x.id}" tabindex="0" role="button" aria-label="Abrir conteúdo completo"><span class="caminho">${caminho(x.c)}</span><p>${esc(x.t)}</p><span class="meta"><span><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i>${esc(x.f)}</span><span class="num">${dataCurta(x.d)}</span>${prio(x.p)}</span></li>`;
+
+/* ---------- Navegação ---------- */
+let telaAtual = "";
+function mostrar(nome) {
+  fecharPainel();
+  $$(".tela").forEach(s => s.hidden = s.id !== "tela-" + nome);
+  const marcado = nome === "conteudo" ? voltarPara : nome;
+  $$(".menu button").forEach(b => b.dataset.ir === marcado ? b.setAttribute("aria-current", "page") : b.removeAttribute("aria-current"));
+  telaAtual = nome; document.body.dataset.tela = nome;
+  window.scrollTo(0, 0);
+}
+function ir(nome, semHistorico) {
+  if (!document.getElementById("tela-" + nome) || nome === "conteudo") nome = "hoje";
+  mostrar(nome);
+  if (location.hash !== "#" + nome) semHistorico ? history.replaceState(null, "", "#" + nome) : history.pushState(null, "", "#" + nome);
+  if (nome === "mapa") desenharMapa();
+  if (nome === "tempo") desenharTempo();
+  if (nome === "hoje") desenharHoje();
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-ir]"); if (b) { e.preventDefault(); ir(b.dataset.ir); } });
+
+/* ---------- HOJE ---------- */
+let rev = {i: 0, feitos: 0};
+function desenharHoje() {
+  HOJE = new Date();
+  $("#hoje-data").textContent = HOJE.toLocaleDateString("pt-BR", {weekday:"long", day:"numeric", month:"long"});
+  const hr = HOJE.getHours(); $("#t-hoje").textContent = (hr < 12 ? "Bom dia" : hr < 18 ? "Boa tarde" : "Boa noite") + ", Samuel.";
+  if (!D.length) {
+    $("#metricas").innerHTML = ""; $("#rev-conta").textContent = "";
+    $("#revisao").className = "revisao fim";
+    $("#revisao").innerHTML = `<i class="ti ti-plant-2" style="font-size:34px;color:var(--cor-destaque)" aria-hidden="true"></i><h2>Sua base começa aqui.</h2><p class="sec">Registre o primeiro conhecimento: uma frase, um áudio, a foto de uma página marcada ou um vídeo do YouTube.</p><button class="botao" data-ir="registrar"><span>Registrar o primeiro</span><span class="seta"><i class="ti ti-plus" aria-hidden="true"></i></span></button>`;
+    $("#barras").innerHTML = `<p class="sec" style="padding:4px 0 18px">Os temas aparecem aqui conforme você registra.</p>`;
+    $("#recentes").innerHTML = `<li><p class="sec">Nada registrado ainda.</p></li>`;
+    return;
+  }
+  const galhos = new Set(D.map(x => x.c.slice(0, 2).join(">"))).size;
+  const temas = new Set(D.map(x => x.c[0])).size;
+  const ultMeses = Array.from({length: 8}, (_, i) => { const d = new Date(HOJE.getFullYear(), HOJE.getMonth() - 7 + i, 1); const m = d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0"); return D.filter(x => x.d.startsWith(m)).length; });
+  const maxM = Math.max(...ultMeses, 1);
+  const porTema = Object.values(D.reduce((a, x) => (a[x.c[0]] = (a[x.c[0]] || 0) + 1, a), {})).sort((a, b) => b - a);
+  const faltam = FILA.length - rev.i;
+  const dias = INFO.ultimos14.map((n, i) => i === 13 ? (n ? "hoje" : "") : n ? "on" : "");
+  $("#metricas").innerHTML = `
+    <button class="metrica" data-ir="tempo"><span class="tit">Conhecimentos<i class="ti ti-books" aria-hidden="true"></i></span>
+      <span class="valor"><strong class="num">${D.length}</strong><small>guardados</small></span>
+      <span class="mini-barras" aria-label="Registros nos últimos 8 meses">${ultMeses.map(n => `<i style="height:${Math.max(n / maxM * 100, 10)}%"></i>`).join("")}</span></button>
+    <button class="metrica" data-ir-arvore><span class="tit">Galhos<i class="ti ti-hierarchy-2" aria-hidden="true"></i></span>
+      <span class="valor"><strong class="num">${galhos}</strong><small>em ${temas} ${temas === 1 ? "tema" : "temas"}</small></span>
+      <span class="mini-faixa" aria-label="Tamanho de cada tema">${porTema.map((n, i) => `<i style="flex:${n};opacity:${i ? 1 - i * .17 : 1}"></i>`).join("")}</span></button>
+    <button class="metrica escuro" data-ir-revisao><span class="tit">Lembrar hoje<i class="ti ti-repeat" aria-hidden="true"></i></span>
+      <span class="valor"><strong class="num">${faltam}</strong><small>${faltam ? (faltam === 1 ? "falta" : "faltam") : "tudo feito"}</small></span>
+      <span class="mini-passos" aria-label="${rev.i} de ${FILA.length} revisados">${FILA.map((_, i) => `<i class="${i < rev.i ? "on" : ""}"></i>`).join("")}</span></button>
+    <button class="metrica" data-ir-revisao><span class="tit">Sequência<i class="ti ti-flame" aria-hidden="true"></i></span>
+      <span class="valor"><strong class="num">${INFO.sequencia}</strong><small>${INFO.sequencia === 1 ? "dia" : "dias"}</small></span>
+      <span class="mini-dias" aria-label="Últimos 14 dias">${dias.map(c => `<i class="${c}"></i>`).join("")}</span></button>`;
+  const cont = {}; D.forEach(x => cont[x.c[0]] = (cont[x.c[0]] || 0) + 1);
+  const ord = Object.entries(cont).sort((a, b) => b[1] - a[1]), max = ord[0][1];
+  $("#barras").innerHTML = ord.map(([t, n], i) => `<button class="barra" data-abrir-galho="${t}"><span>${t}</span><span class="trilho"><i style="width:${n / max * 100}%;animation-delay:${i * 60}ms"></i></span><span class="num">${n}</span></button>`).join("");
+  $("#recentes").innerHTML = [...D].sort((a, b) => b.d.localeCompare(a.d)).slice(0, 4).map(itemLista).join("");
+  desenharRevisao();
+}
+function desenharRevisao() {
+  const box = $("#revisao");
+  $("#rev-conta").textContent = rev.i < FILA.length ? `${rev.i + 1} de ${FILA.length}` : "";
+  if (rev.i >= FILA.length) {
+    box.className = "revisao fim";
+    box.innerHTML = `<i class="ti ti-circle-check" style="font-size:34px;color:var(--cor-destaque)" aria-hidden="true"></i><h2>${rev.feitos ? "Tudo lembrado por hoje." : "Nada para revisar hoje."}</h2><p class="sec">${rev.feitos ? `Você revisou ${rev.feitos} ${rev.feitos === 1 ? "conhecimento" : "conhecimentos"}. ` : "O que você registra volta no dia seguinte. "}Amanhã chegam outros, escolhidos pelo que está mais perto de ser esquecido.</p>`;
+    return;
+  }
+  const x = porId(FILA[rev.i]);
+  box.className = "revisao";
+  box.innerHTML = `
+    <div class="revisao-topo"><span class="caminho">${caminho(x.c)}</span><span class="passos" aria-hidden="true">${FILA.map((_, n) => `<i class="${n < rev.i ? "feito" : n === rev.i ? "agora" : ""}"></i>`).join("")}</span></div>
+    <blockquote>${esc(x.t)}</blockquote>
+    <div class="fonte"><i class="ti ${ICONE[x.o]} cor-${x.o}" aria-hidden="true"></i>${esc(x.f)} · ${dataCurta(x.d)} ${prio(x.p)}</div>
+    <p class="aviso" id="rev-aviso"></p>
+    <div class="revisao-botoes">
+      <button class="vazado" data-r="0">Esqueci</button>
+      <button class="botao" data-r="1"><span>Lembrei</span><span class="seta"></span></button>
+    </div>`;
+  box.querySelectorAll("[data-r]").forEach(b => b.onclick = () => responder(b.dataset.r === "1", x));
+}
+async function responder(lembrou, x) {
+  $$("#revisao [data-r]").forEach(b => b.disabled = true);
+  let dias = 1;
+  try {
+    const r = await api("/api/revisar", {method: "POST", json: {id: x.id, lembrou}});
+    dias = r.dias; INFO = r.hoje; x.srs = {...(x.srs || {}), volta: r.volta};
+  } catch (e) {
+    $("#rev-aviso").textContent = e.message; $$("#revisao [data-r]").forEach(b => b.disabled = false); return;
+  }
+  $("#rev-aviso").innerHTML = `<i class="ti ti-calendar-repeat" aria-hidden="true"></i> ${dias === 1 ? "Volta amanhã para fixar." : "Volta daqui a " + dias + " dias."}`;
+  setTimeout(() => {
+    $("#revisao blockquote").classList.add("cartao-sai");
+    setTimeout(() => { rev.i++; rev.feitos++; desenharHoje(); }, 230);
+  }, 900);
+}
+
+/* ---------- REGISTRAR ---------- */
+const reg = {tipo: "texto", marca: "sim", origem: "livro", nivel: 0, pronto: {}};
+function apertar(grupo, attr, valor) { $$(grupo + " [" + attr + "]").forEach(b => b.setAttribute("aria-pressed", String(b.getAttribute(attr) === valor))); }
+$$(".tipos button").forEach(b => b.onclick = () => {
+  reg.tipo = b.dataset.tipo; apertar(".tipos", "data-tipo", reg.tipo);
+  $$(".painel").forEach(p => p.hidden = p.dataset.painel !== reg.tipo);
+  $("#reg-erro").textContent = "";
+  if (reg.tipo === "youtube") reg.origem = "video", apertar(".origens", "data-origem", "video");
+});
+$$(".escolha button").forEach(b => b.onclick = () => {
+  reg.marca = b.dataset.marca; apertar(".escolha", "data-marca", reg.marca);
+  $("#ajuda-marca").textContent = reg.marca === "sim" ? "Reconhece marca-texto de qualquer cor, caneta, lápis, sublinhado, colchete ou traço na margem, círculo e seta." : "Pega todo o texto da página que faça sentido, sem número de página nem cabeçalho.";
+});
+$$(".origens button").forEach(b => b.onclick = () => { reg.origem = b.dataset.origem; apertar(".origens", "data-origem", reg.origem); });
+$$(".niveis button").forEach(b => b.onclick = () => { reg.nivel = +b.dataset.nivel; apertar(".niveis", "data-nivel", b.dataset.nivel); });
+
+/* Áudio: grava no navegador, converte para WAV 16 kHz e a IA transcreve */
+async function paraWav(blob) {
+  const TAXA = 16000, ctx = new AudioContext();
+  let bruto;
+  try { bruto = await ctx.decodeAudioData(await blob.arrayBuffer()); } finally { ctx.close(); }
+  const off = new OfflineAudioContext(1, Math.max(1, Math.ceil(bruto.duration * TAXA)), TAXA);
+  const fonte = off.createBufferSource(); fonte.buffer = bruto; fonte.connect(off.destination); fonte.start();
+  const pcm = (await off.startRendering()).getChannelData(0);
+  const v = new DataView(new ArrayBuffer(44 + pcm.length * 2));
+  const txt = (o, t) => { for (let k = 0; k < t.length; k++) v.setUint8(o + k, t.charCodeAt(k)); };
+  txt(0, "RIFF"); v.setUint32(4, 36 + pcm.length * 2, true); txt(8, "WAVE"); txt(12, "fmt ");
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true); v.setUint32(24, TAXA, true); v.setUint32(28, TAXA * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  txt(36, "data"); v.setUint32(40, pcm.length * 2, true);
+  for (let k = 0; k < pcm.length; k++) v.setInt16(44 + k * 2, Math.max(-1, Math.min(1, pcm[k])) * 0x7fff, true);
+  return new Blob([v], {type: "audio/wav"});
+}
+/* grava até parar (ou 7 min) e devolve o texto; ui: {aoComecar, aoNivel, aoSegundo, aoTranscrever} */
+async function gravarETranscrever(ui) {
+  const fluxo = await navigator.mediaDevices.getUserMedia({audio: true});
+  const partes = [], gravador = new MediaRecorder(fluxo);
+  gravador.ondataavailable = e => partes.push(e.data);
+  const ctx = new AudioContext(), an = ctx.createAnalyser(); an.fftSize = 512;
+  ctx.createMediaStreamSource(fluxo).connect(an);
+  const amostra = new Uint8Array(512); let quadro, ult = 0, s = 0;
+  const passo = t => { quadro = requestAnimationFrame(passo); if (t - ult < 70) return; ult = t; an.getByteTimeDomainData(amostra); let q = 0; for (const x of amostra) q += ((x - 128) / 128) ** 2; ui.aoNivel?.(Math.min(1, Math.sqrt(q / amostra.length) * 5)); };
+  quadro = requestAnimationFrame(passo);
+  const relogio = setInterval(() => { s++; ui.aoSegundo?.(s); if (s >= 420) gravador.stop(); }, 1000);
+  const parou = new Promise(r => gravador.onstop = r);
+  gravador.start(); ui.aoComecar?.(() => gravador.state === "recording" && gravador.stop());
+  await parou;
+  clearInterval(relogio); cancelAnimationFrame(quadro); ctx.close(); fluxo.getTracks().forEach(t => t.stop());
+  ui.aoTranscrever?.();
+  const wav = await paraWav(new Blob(partes, {type: gravador.mimeType}));
+  return (await api("/api/transcrever", {method: "POST", body: wav, headers: {"content-type": "audio/wav"}})).texto;
+}
+$(".onda").innerHTML = Array.from({length: 28}, () => "<i></i>").join("");
+let pararGravacao = null;
+$("#btn-gravar").onclick = async () => {
+  if (pararGravacao) return pararGravacao();
+  const g = $("#gravar"), botao = $("#btn-gravar"), ajuda = $("#ajuda-audio"), barras = [...$$(".onda i")], niveis = barras.map(() => 0);
+  try {
+    const texto = await gravarETranscrever({
+      aoComecar: parar => { pararGravacao = parar; g.classList.add("ativo"); botao.innerHTML = '<i class="ti ti-player-stop" aria-hidden="true"></i>'; botao.setAttribute("aria-label", "Parar e transcrever"); ajuda.textContent = "Gravando. Toque para parar."; },
+      aoNivel: n => { niveis.shift(); niveis.push(n); niveis.forEach((v, k) => barras[k].style.height = Math.max(6, v * 38) + "px"); },
+      aoSegundo: s => $("#tempo-audio").textContent = Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0"),
+      aoTranscrever: () => { pararGravacao = null; g.classList.remove("ativo"); botao.disabled = true; botao.innerHTML = '<i class="ti ti-loader-2" aria-hidden="true"></i>'; ajuda.textContent = "Transcrevendo…"; barras.forEach(b => b.style.height = ""); },
+    });
+    const campo = $("#txt-audio"); campo.value = campo.value.trim() ? campo.value.trim() + "\n\n" + texto : texto;
+    $("#campo-transcricao").hidden = false; ajuda.textContent = "Pronto. Confira o texto e corrija se precisar. Pode gravar mais.";
+  } catch (e) {
+    ajuda.textContent = e.name === "NotAllowedError" ? "Libere o microfone no navegador para gravar." : e.message;
+  }
+  pararGravacao = null; botao.disabled = false; g.classList.remove("ativo");
+  botao.innerHTML = '<i class="ti ti-microphone" aria-hidden="true"></i>'; botao.setAttribute("aria-label", "Gravar mais");
+};
+
+/* Foto: reduz no aparelho e a IA lê só o marcado (ou tudo) */
+async function reduzirImagem(arquivo, max = 2000) {
+  const img = await createImageBitmap(arquivo);
+  const k = Math.min(1, max / Math.max(img.width, img.height)), c = document.createElement("canvas");
+  c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+  c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+  return new Promise(r => c.toBlob(r, "image/jpeg", .88));
+}
+async function lerFoto(arquivo) {
+  const box = $("#previa-foto"); box.hidden = false;
+  box.innerHTML = `<img src="${URL.createObjectURL(arquivo)}" alt="Foto enviada"><div class="lendo" aria-label="Lendo a página"><i></i><i></i><i></i></div>`;
+  const marcado = reg.marca === "sim";
+  try {
+    const d = await api("/api/foto?marcado=" + (marcado ? 1 : 0), {method: "POST", body: await reduzirImagem(arquivo), headers: {"content-type": "image/jpeg"}});
+    if (d.fonte && !$("#origem-nome").value.trim()) $("#origem-nome").value = d.fonte;
+    const n = d.trechos.length;
+    const msg = !n ? (marcado ? "Não achei marcação nessa foto. Tente com mais luz ou escolha \"Não, tudo\"." : "Não consegui ler texto nessa foto.")
+      : marcado ? `Encontrei ${n} ${n === 1 ? "trecho marcado" : "trechos marcados"}${d.marcacoes ? ": " + esc(d.marcacoes) : ""}.` : "Li a página.";
+    box.querySelector(".lendo").outerHTML = `<p class="achado"><i class="ti ti-sparkles" aria-hidden="true"></i>${msg}</p><label class="campo"><span>Texto lido (pode corrigir)</span><textarea id="txt-foto">${esc(d.trechos.join("\n\n"))}</textarea></label>`;
+  } catch (e) { box.querySelector(".lendo").outerHTML = `<p class="erro">${esc(e.message)}</p>`; }
+}
+["#foto-camera", "#foto-galeria"].forEach(s => $(s).onchange = e => { const f = e.target.files[0]; if (f) lerFoto(f); e.target.value = ""; });
+
+/* Trechos para escolher (YouTube e arquivo) */
+function trechos(alvo, titulo, meta, itens, icone) {
+  const box = $(alvo); box.hidden = false;
+  box.innerHTML = `
+    <div class="video" style="margin-bottom:22px"><span class="capa"><i class="ti ${icone}" aria-hidden="true"></i></span><div><h3>${titulo}</h3><span class="sec">${meta}</span></div></div>
+    <div class="trechos-topo"><span class="sec num" data-conta></span><button class="link" data-todos>Texto inteiro</button></div>
+    <ul class="trechos">${itens.map(x => `<li class="fora"><label><input type="checkbox"><span class="hora num">${esc(x.h)}</span><span class="txt">${esc(x.t)}</span></label></li>`).join("")}</ul>`;
+  const conta = () => { const c = box.querySelectorAll("input:checked").length; box.querySelector("[data-conta]").textContent = c ? `${c} de ${itens.length} trechos vão entrar` : `Marque os trechos que importam, ou toque em Texto inteiro`; box.querySelectorAll("li").forEach(li => li.classList.toggle("fora", !li.querySelector("input").checked)); };
+  box.querySelectorAll("input").forEach(i => i.onchange = conta);
+  box.querySelector("[data-todos]").onclick = () => { const todos = [...box.querySelectorAll("input")].every(i => i.checked); box.querySelectorAll("input").forEach(i => i.checked = !todos); conta(); };
+  conta();
+}
+$("#yt-buscar").onclick = async () => {
+  const u = $("#yt-url").value.trim(), er = $("#yt-erro"), b = $("#yt-buscar");
+  if (!/youtu\.?be/.test(u)) { er.textContent = "Cole o link de um vídeo do YouTube."; return; }
+  er.textContent = ""; b.disabled = true; b.innerHTML = '<i class="ti ti-loader-2" aria-hidden="true"></i>Buscando…';
+  try {
+    const d = await api("/api/youtube", {method: "POST", json: {url: u}});
+    reg.yt = {url: u};
+    if (!$("#origem-nome").value.trim()) $("#origem-nome").value = d.titulo + (d.canal ? ", " + d.canal : "");
+    trechos("#yt-trechos", esc(d.titulo), `${esc(d.canal)}${d.minutos ? " · " + d.minutos + " min" : ""} · legenda${d.automatica ? " automática" : ""} (${esc(d.idioma)})`, d.trechos, "ti-brand-youtube");
+  } catch (e) { er.textContent = e.message; }
+  b.disabled = false; b.innerHTML = '<i class="ti ti-download" aria-hidden="true"></i>Buscar transcrição';
+};
+$("#yt-url").oninput = () => $("#yt-erro").textContent = "";
+$("#arquivo").onchange = async e => {
+  const f = e.target.files[0]; if (!f) return; e.target.value = "";
+  const box = $("#arquivo-trechos"); box.hidden = false;
+  box.innerHTML = `<div class="lendo" aria-label="Lendo o arquivo"><i></i><i></i><i></i></div><p class="sec">Lendo ${esc(f.name)}…</p>`;
+  try {
+    const d = await api("/api/arquivo", {method: "POST", body: f, headers: {"x-nome": encodeURIComponent(f.name), "content-type": f.type || "application/octet-stream"}});
+    if (!$("#origem-nome").value.trim()) $("#origem-nome").value = (d.titulo || f.name).replace(/\.\w+$/, "");
+    trechos("#arquivo-trechos", esc(d.titulo || f.name), `${d.trechos.length} trechos. Escolha o que entra.`, d.trechos, "ti-file-text");
+  } catch (er) { box.innerHTML = `<p class="erro">${esc(er.message)}</p>`; }
+};
+
+/* Registrar: o servidor organiza com a IA e devolve onde guardou */
+$("#btn-registrar").onclick = async () => {
+  const erro = $("#reg-erro"), btn = $("#btn-registrar"); let texto = "";
+  if (reg.tipo === "texto") texto = $("#txt").value.trim();
+  if (reg.tipo === "audio") texto = $("#campo-transcricao").hidden ? "" : $("#txt-audio").value.trim();
+  if (reg.tipo === "foto") texto = $("#txt-foto") ? $("#txt-foto").value.trim() : "";
+  if (reg.tipo === "youtube") texto = [...$$("#yt-trechos input:checked")].map(i => i.closest("label").querySelector(".txt").textContent).join("\n\n");
+  if (reg.tipo === "arquivo") texto = [...$$("#arquivo-trechos input:checked")].map(i => i.closest("label").querySelector(".txt").textContent).join("\n\n");
+  const falta = {texto: "Escreva o insight antes de registrar.", audio: "Grave o áudio antes de registrar.", foto: "Tire ou escolha a foto antes de registrar.", youtube: "Busque a transcrição e marque pelo menos um trecho.", arquivo: "Escolha o arquivo e marque pelo menos um trecho."};
+  if (!texto) { erro.textContent = falta[reg.tipo]; return; }
+  erro.textContent = ""; btn.setAttribute("aria-busy", "true"); btn.querySelector("span").textContent = "Organizando…";
+  let d;
+  try { d = await api("/api/registrar", {method: "POST", json: {texto, tipo: reg.tipo, origem: reg.origem, fonte: $("#origem-nome").value.trim(), prioridade: reg.nivel, url: reg.tipo === "youtube" ? reg.yt?.url : undefined}}); }
+  catch (e) { erro.textContent = e.message; return; }
+  finally { btn.removeAttribute("aria-busy"); btn.querySelector("span").textContent = "Registrar conhecimento"; }
+  const novo = d.item; D.push(novo); d.ligados.forEach(x => x && L.push([novo.id, x.id]));
+  $("#reg-form").hidden = true;
+  const r = $("#reg-resultado"); r.hidden = false;
+  r.innerHTML = `
+    <div class="cabeca"><span class="rotulo">Registrado</span><h1>Guardado na sua base de conhecimento.</h1>${d.aviso ? `<p class="erro">${esc(d.aviso)}</p>` : ""}</div>
+    <div class="resultado cartao"><ol>
+      <li><i class="ti ti-circle-check" aria-hidden="true"></i><div><strong>Li o conteúdo</strong><p class="det">${esc(novo.t)}</p></div></li>
+      <li><i class="ti ti-circle-check" aria-hidden="true"></i><div><strong>Escolhi o galho</strong><p class="det caminho">${caminho(novo.c)}${d.galhoNovo ? '<span class="novo-galho">galho novo</span>' : ""}</p></div></li>
+      <li><i class="ti ti-circle-check" aria-hidden="true"></i><div><strong>${d.ligados.length ? `Liguei com ${d.ligados.length} ${d.ligados.length === 1 ? "coisa" : "coisas"} que você já sabe` : "Ainda não achei ligação com o que você já registrou"}</strong>${d.ligados.length ? `<ul class="lista">${d.ligados.map(x => `<li class="abre" data-abrir-item="${x.id}" tabindex="0" role="button" style="padding:10px 30px 10px 0"><p class="det" style="margin:0">${esc(x.t)}</p></li>`).join("")}</ul>` : ""}</div></li>
+      <li><i class="ti ti-circle-check" aria-hidden="true"></i><div><strong>${reg.nivel ? "Prioridade que você escolheu" : "Sugeri a prioridade"}</strong><p class="det">${prio(novo.p)}&nbsp; ${novo.p} de 5${!reg.nivel && d.motivo ? ": " + esc(d.motivo) : ""}</p></div></li>
+      <li><i class="ti ti-circle-check" aria-hidden="true"></i><div><strong>Agendei a primeira lembrança</strong><p class="det">Volta para você amanhã no "Lembrar hoje".</p></div></li>
+    </ol></div>
+    <div class="resultado-acoes"><button class="botao" data-abrir-item="${novo.id}"><span>Ver o conhecimento</span><span class="seta"><i class="ti ti-arrow-right" aria-hidden="true"></i></span></button><button class="vazado" id="reg-outro">Registrar outro</button></div>`;
+  r.querySelectorAll(".resultado > ol > li").forEach((li, i) => setTimeout(() => li.classList.add("ok"), 150 + i * 260));
+  $("#reg-outro").onclick = limparRegistro;
+  focoMapa = novo.id;
+  window.scrollTo(0, 0);
+};
+function limparRegistro() {
+  $("#reg-form").hidden = false; $("#reg-resultado").hidden = true;
+  ["#txt", "#origem-nome", "#yt-url", "#txt-audio"].forEach(s => $(s).value = "");
+  ["#previa-foto", "#yt-trechos", "#arquivo-trechos", "#campo-transcricao"].forEach(s => $(s).hidden = true);
+  $("#tempo-audio").textContent = "0:00"; $("#ajuda-audio").textContent = "Toque para gravar. Fale do seu jeito, a transcrição sai sozinha.";
+  reg.yt = null; window.scrollTo(0, 0);
+}
+
+/* ---------- MAPA ---------- */
+let realcarPorId = () => {}, aba = "grafo", focoMapa = null, zoomAtual = null, svgSel = null, encaixe = d3.zoomIdentity;
+$$(".abas button").forEach(b => b.onclick = () => { aba = b.dataset.aba; $$(".abas button").forEach(x => x.setAttribute("aria-selected", String(x === b))); desenharMapa(); });
+$$("#zoom button").forEach(b => b.onclick = () => {
+  if (!zoomAtual) return; const z = +b.dataset.z;
+  z ? svgSel.transition().duration(250).call(zoomAtual.scaleBy, z) : svgSel.transition().duration(350).call(zoomAtual.transform, encaixe);
+});
+function arvoreDados() {
+  const raiz = {nome: "Tudo", filhos: new Map()};
+  D.forEach(x => { let n = raiz; x.c.forEach(p => { if (!n.filhos.has(p)) n.filhos.set(p, {nome: p, filhos: new Map()}); n = n.filhos.get(p); }); n.filhos.set("i" + x.id, {nome: x.t, item: x, filhos: new Map()}); });
+  const conv = n => ({nome: n.nome, item: n.item, children: n.filhos.size ? [...n.filhos.values()].map(conv) : undefined});
+  return conv(raiz);
+}
+function abrirPainel(html) {
+  const d = $("#detalhe"); d.hidden = false;
+  d.innerHTML = `<button class="fechar" data-fechar aria-label="Fechar"><i class="ti ti-x" aria-hidden="true"></i></button>` + html;
+  d.style.animation = "none"; d.offsetHeight; d.style.animation = "";
+}
+function fecharPainel() {
+  const d = $("#detalhe"); if (d) d.hidden = true;
+  realcarPorId(null);
+  if (telaAtual === "mapa") visaoGeral();
+}
+const icone = o => `<i class="ti ${ICONE[o]} cor-${o}" aria-hidden="true"></i>`;
+function mostrarSelecao() {
+  const el = $("#selecao-mapa"); el.style.animation = "none"; el.offsetHeight; el.style.animation = "";
+  const r = el.getBoundingClientRect();
+  if (r.top > innerHeight - 160) window.scrollBy({top: r.top - innerHeight * .42, behavior: "smooth"});
+}
+function previaItem(x) { paginaItem(x, "#selecao-mapa", true); mostrarSelecao(); }
+function previaGalho(cam) { paginaGalho(cam, "#selecao-mapa", true); mostrarSelecao(); }
+function visaoGeral() {
+  const cont = D.reduce((a, x) => (a[x.c[0]] = (a[x.c[0]] || 0) + 1, a), {});
+  $("#selecao-mapa").innerHTML = `<div class="bloco-topo"><h2>Todos os temas</h2><span class="sec num">${Object.keys(cont).length}</span></div>
+    <div class="subs">${Object.entries(cont).sort((a, b) => b[1] - a[1]).map(([t, k]) => `<button class="sub-b" data-abrir-galho="${esc(t)}"><strong>${esc(t)}</strong><span>${k} ${k === 1 ? "conhecimento" : "conhecimentos"}</span><i class="ti ti-arrow-right" aria-hidden="true"></i></button>`).join("")}</div>
+    <p class="sec" style="margin-top:14px">Toque num ponto do mapa ou num tema para ver tudo o que está dentro.</p>`;
+}
+const trilhaCam = cam => cam.map((p, i) => `<button class="link-caminho" data-abrir-galho="${esc(cam.slice(0, i + 1).join(">"))}">${esc(p)}</button>`).join('<i class="ti ti-chevron-right" aria-hidden="true"></i>');
+const voltarBtn = `<button class="voltar" data-voltar><i class="ti ti-arrow-left" aria-hidden="true"></i>Voltar</button>`;
+function paginaItem(x, alvo = "#conteudo", inline = false) {
+  const lig = ligacoes(x.id).map(porId).filter(Boolean);
+  const irmaos = D.filter(y => y.id !== x.id && y.c.join(">") === x.c.join(">"));
+  const dt = new Date(x.d + "T12:00:00").toLocaleDateString("pt-BR", {day: "numeric", month: "short", year: "numeric"}).replace(".", "");
+  const prox = FILA.includes(x.id) ? "Hoje" : "Daqui a " + ((x.id * 7) % 20 + 3) + " dias";
+  $(alvo).innerHTML = `${inline ? "" : voltarBtn}
+    <div class="conteudo-grade">
+      <article class="leitura">
+        <nav class="trilha-cam" aria-label="Galho">${trilhaCam(x.c)}</nav>
+        <h1 class="conteudo-titulo${inline ? " menor" : ""}">${esc(x.t)}</h1>
+        <div class="corpo">${x.corpo ? corpoHtml(x.corpo) : `<p class="sec">Registrado só com esta frase.</p>`}</div>
+      </article>
+      <aside class="ficha-lado">
+        <dl class="ficha-mini">
+          <div><dt>Fonte</dt><dd>${icone(x.o)}<span>${esc(x.f)}</span></dd></div>
+          <div><dt>Tipo</dt><dd>${NOME_ORIGEM[x.o] || x.o}</dd></div>
+          <div><dt>Registrado</dt><dd>${dt}</dd></div>
+          <div><dt>Prioridade</dt><dd>${prio(x.p)} ${x.p} de 5</dd></div>
+          <div><dt>Volta</dt><dd>${prox}</dd></div>
+        </dl>
+        <button class="botao" data-perguntar-sobre="${esc("Me explica melhor e liga com o que eu já sei: " + x.t)}"><span>Perguntar ao assistente</span><span class="seta"><i class="ti ti-brain" aria-hidden="true"></i></span></button>
+        ${inline ? "" : `<button class="link" style="justify-self:start" data-ver-mapa="${x.id}">Ver no mapa</button>`}
+      </aside>
+    </div>
+    ${lig.length ? `<div class="bloco bloco-topo"><h2>Ligado a</h2><span class="sec num">${lig.length}</span></div><div class="grade">${lig.map(itemBloco).join("")}</div>` : ""}
+    ${irmaos.length ? `<div class="bloco bloco-topo"><h2>Mais de ${esc(x.c[x.c.length - 1])}</h2><span class="sec num">${irmaos.length}</span></div><div class="grade">${irmaos.map(itemBloco).join("")}</div>` : ""}`;
+}
+function paginaGalho(cam, alvo = "#conteudo", inline = false) {
+  const nome = cam[cam.length - 1];
+  const itens = D.filter(x => cam.every((p, i) => x.c[i] === p)).sort((a, b) => b.p - a.p);
+  const top = itens.slice(0, 2).map(x => x.t.replace(/\.$/, "").toLowerCase()).join("; e ");
+  const subs = Object.entries(itens.filter(x => x.c.length > cam.length).reduce((a, x) => (a[x.c[cam.length]] = (a[x.c[cam.length]] || 0) + 1, a), {}));
+  $(alvo).innerHTML = `${inline ? "" : voltarBtn}
+    ${cam.length > 1 ? `<nav class="trilha-cam" aria-label="Galho">${trilhaCam(cam.slice(0, -1))}</nav>` : `<span class="rotulo" style="margin-bottom:14px">Tema</span>`}
+    <h1 class="conteudo-titulo${inline ? " menor" : ""}">${esc(nome)}</h1>
+    <div class="resumo-bloco"><span class="rotulo">Resumo do galho</span><p>${RESUMOS[cam.join(">")] ? esc(RESUMOS[cam.join(">")]) : `Você guardou ${itens.length} ${itens.length === 1 ? "conhecimento" : "conhecimentos"} aqui. O que mais se repete: ${esc(top)}.`}</p></div>
+    <div class="acoes-conteudo"><button class="botao" data-perguntar-sobre="${esc("Me resume tudo que eu sei sobre " + nome)}"><span>Perguntar ao assistente</span><span class="seta"><i class="ti ti-brain" aria-hidden="true"></i></span></button></div>
+    ${subs.length ? `<div class="bloco bloco-topo"><h2>Galhos</h2><span class="sec num">${subs.length}</span></div><div class="subs">${subs.map(([sb, k]) => `<button class="sub-b" data-abrir-galho="${esc(cam.concat(sb).join(">"))}"><strong>${esc(sb)}</strong><span>${k} ${k === 1 ? "conhecimento" : "conhecimentos"}</span><i class="ti ti-arrow-right" aria-hidden="true"></i></button>`).join("")}</div>` : ""}
+    <div class="bloco bloco-topo"><h2>Conhecimentos</h2><span class="sec num">${itens.length}</span></div>
+    <div class="grade">${itens.map(itemBloco).join("")}</div>`;
+}
+let voltarPara = "hoje", navegou = false;
+function abrirDe(b) {
+  const h = b.dataset.abrirItem ? "conteudo/" + b.dataset.abrirItem : "galho/" + encodeURIComponent(b.dataset.abrirGalho);
+  if (telaAtual !== "conteudo") voltarPara = telaAtual;
+  navegou = true; history.pushState(null, "", "#" + h); rotear();
+}
+function rotear() {
+  const h = location.hash.slice(1);
+  if (h.startsWith("conteudo/")) { const x = porId(+h.slice(9)); if (x) { mostrar("conteudo"); return paginaItem(x); } }
+  if (h.startsWith("galho/")) { mostrar("conteudo"); return paginaGalho(decodeURIComponent(h.slice(6)).split(">")); }
+  ir(h || "hoje", true);
+}
+addEventListener("popstate", rotear);
+$("#detalhe").addEventListener("click", e => {
+  e.stopPropagation();
+  const b = e.target.closest("[data-fechar],[data-abrir-item],[data-abrir-galho]"); if (!b) return;
+  if (b.hasAttribute("data-fechar")) return fecharPainel();
+  abrirDe(b);
+});
+document.addEventListener("click", e => {
+  if (e.target.closest("#detalhe")) return;
+  const sm = e.target.closest("#selecao-mapa [data-abrir-item], #selecao-mapa [data-abrir-galho]");
+  if (sm) {
+    if (sm.dataset.abrirItem) { const id = +sm.dataset.abrirItem; previaItem(porId(id)); realcarPorId("i" + id); }
+    else { const cam = sm.dataset.abrirGalho.split(">"); previaGalho(cam); realcarPorId(cam.join(">")); }
+    return;
+  }
+  if (e.target.closest("[data-voltar]")) { navegou ? history.back() : ir(voltarPara); return; }
+  const q = e.target.closest("[data-perguntar-sobre]"); if (q) { ir("assistente"); perguntar(q.dataset.perguntarSobre); return; }
+  const m = e.target.closest("[data-ver-mapa]"); if (m) { focoMapa = +m.dataset.verMapa; aba = "grafo"; ir("mapa"); return; }
+  if (e.target.closest("[data-ir-arvore]")) { aba = "arvore"; ir("mapa"); return; }
+  if (e.target.closest("[data-ir-revisao]")) { $("#revisao").scrollIntoView({behavior: "smooth", block: "center"}); return; }
+  const b = e.target.closest("[data-abrir-item],[data-abrir-galho]"); if (b) abrirDe(b);
+});
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-abrir-item][tabindex]")) { e.preventDefault(); e.target.click(); } });
+["pointerdown", "wheel", "touchstart"].forEach(ev => $("#detalhe").addEventListener(ev, e => e.stopPropagation(), {passive: true}));
+addEventListener("keydown", e => { if (e.key === "Escape") fecharPainel(); });
+function desenharMapa() {
+  const svg = d3.select("#svg-mapa"); svg.selectAll("*").remove(); svgSel = svg;
+  realcarPorId = () => {}; $("#arvore-voltar").hidden = true; fecharPainel();
+  $$(".abas button").forEach(x => x.setAttribute("aria-selected", String(x.dataset.aba === aba)));
+  if (!D.length) { $("#legenda").innerHTML = ""; $("#selecao-mapa").innerHTML = `<div class="vazio"><h2>O mapa nasce com o primeiro registro.</h2><button class="link" data-ir="registrar">Registrar agora</button></div>`; return; }
+  const W = $("#palco").clientWidth, H = $("#palco").clientHeight;
+  svg.attr("viewBox", [-W / 2, -H / 2, W, H]);
+  const g = svg.append("g");
+  zoomAtual = d3.zoom().scaleExtent([.4, 5]).on("zoom", e => g.attr("transform", e.transform));
+  svg.call(zoomAtual).on("dblclick.zoom", null);
+  $("#mapa-conta").innerHTML = `${D.length} conhecimentos<span class="so-pc-inline"> · ${new Set(D.map(x => x.c[0])).size} temas</span>`;
+  const cs = getComputedStyle(document.documentElement), cor = v => cs.getPropertyValue(v).trim();
+  if (aba === "grafo") grafo(g, cor, W, H); else arvore(g, cor, W, H);
+}
+function grafo(g, cor, W, H) {
+  $("#dica-mapa").textContent = "Toque num ponto para ver. Puxe para mexer.";
+  /* Árvore radial: o cérebro no centro, temas em volta, galhos saindo, conhecimentos na borda */
+  const raiz = d3.hierarchy(arvoreDados()).count().sort((a, b) => b.value - a.value);
+  d3.tree().size([2 * Math.PI, 1]).separation((a, b) => (a.parent === b.parent ? 1 : 1.8) / Math.max(a.depth, 1))(raiz);
+  let RX = W / 2 - (W < 600 ? 42 : 120), RY = H / 2 - (W < 600 ? 38 : 46);
+  if (W < 600) RX = RY = Math.min(RX, RY);
+  const nivelR = [0, .34, .62, .84];
+  raiz.each(n => {
+    n.r = n.depth === 0 ? 0 : n.data.item ? 1 : nivelR[Math.min(n.depth, 3)];
+    n.a = n.x - Math.PI / 2;
+    n.bx = n.px = Math.cos(n.a) * n.r * RX; n.by = n.py = Math.sin(n.a) * n.r * RY; n.dx = n.dy = 0;
+    n.id = n.data.item ? "i" + n.data.item.id : n.depth ? n.ancestors().reverse().slice(1).map(d => d.data.nome).join(">") : "raiz";
+    n.cam = n.depth && !n.data.item ? n.id.split(">") : null;
+  });
+  const nos = raiz.descendants(), mapa = new Map(nos.map(n => [n.id, n]));
+  const ponto2 = (a, r) => [Math.cos(a) * r * RX, Math.sin(a) * r * RY];
+  const curva = (s, t) => { const m = (s.r + t.r) / 2, a1 = s.depth ? s.a : t.a, [x1, y1] = ponto2(a1, m), [x2, y2] = ponto2(t.a, m); return `M${s.px},${s.py}C${x1 + s.dx},${y1 + s.dy} ${x2 + t.dx},${y2 + t.dy} ${t.px},${t.py}`; };
+  const ramos = raiz.links();
+  const ligas = L.map(([a, b]) => ({source: mapa.get("i" + a), target: mapa.get("i" + b)})).filter(l => l.source && l.target);
+  const raio = n => n.depth === 0 ? 36 : n.data.item ? 3 + n.data.item.p * .9 : n.depth === 1 ? 13 : n.depth === 2 ? 6.5 : 4.5;
+
+  const gLiga = g.append("g").attr("fill", "none").selectAll("path").data(ligas).join("path")
+    .attr("d", l => `M${l.source.px},${l.source.py}Q0,0 ${l.target.px},${l.target.py}`)
+    .attr("stroke", cor("--cor-destaque")).attr("stroke-opacity", .28).attr("stroke-width", 1).attr("stroke-dasharray", "3 4");
+  const gRamo = g.append("g").attr("fill", "none").selectAll("path").data(ramos).join("path")
+    .attr("d", l => curva(l.source, l.target))
+    .attr("stroke", l => l.source.depth === 0 ? cor("--cor-destaque") : cor("--cor-apagada"))
+    .attr("stroke-opacity", l => l.source.depth === 0 ? .55 : .75)
+    .attr("stroke-width", l => l.source.depth === 0 ? 2.2 : l.source.depth === 1 ? 1.4 : 1);
+  const ponto = g.append("g").selectAll("circle").data(nos).join("circle")
+    .attr("cx", n => n.px).attr("cy", n => n.py).attr("r", raio)
+    .attr("fill", n => n.depth === 0 || n.depth === 1 && !n.data.item ? cor("--cor-destaque") : n.data.item ? cor("--p" + n.data.item.p) : cor("--cor-texto"))
+    .attr("stroke", cor("--cor-fundo-2")).attr("stroke-width", n => n.depth === 0 ? 6 : 2).attr("pointer-events", "none");
+  /* cérebro no centro */
+  const centro = g.append("g").attr("pointer-events", "none");
+  centro.append("text").attr("text-anchor", "middle").attr("dy", "0.36em").attr("font-family", "tabler-icons").attr("font-size", 38).attr("fill", "#fff").text("");
+  const rot = g.append("g").selectAll("text").data(nos.filter(n => n.depth && !n.data.item && (W >= 600 || n.depth < 3))).join("text").style("font-size", n => W < 600 && n.depth > 1 ? "10px" : null)
+    .attr("class", n => "no-texto" + (n.depth === 1 ? " tema" : ""))
+    .attr("x", n => n.px + Math.cos(n.a) * (raio(n) + 6)).attr("y", n => n.py + Math.sin(n.a) * (raio(n) + 6))
+    .attr("dy", "0.35em").attr("text-anchor", n => Math.cos(n.a) > .25 ? "start" : Math.cos(n.a) < -.25 ? "end" : "middle")
+    .attr("dy", n => Math.abs(Math.cos(n.a)) <= .25 ? (Math.sin(n.a) > 0 ? "1em" : "-.4em") : "0.35em")
+    .text(n => n.data.nome);
+  const alvo = g.append("g").selectAll("circle").data(nos).join("circle")
+    .attr("cx", n => n.px).attr("cy", n => n.py).attr("r", n => raio(n) + (n.data.item ? 7 : 10))
+    .attr("fill", "transparent").style("cursor", "pointer");
+  alvo.append("title").text(n => n.data.item ? n.data.item.t : n.depth ? n.data.nome : "Sua base");
+  /* elástico: arrasta o ponto, os galhos dele vão junto, os vizinhos acompanham um pouco, e ao soltar tudo volta */
+  const desenhar = () => {
+    nos.forEach(n => { n.px = n.bx + n.dx; n.py = n.by + n.dy; });
+    gRamo.attr("d", l => curva(l.source, l.target));
+    gLiga.attr("d", l => `M${l.source.px},${l.source.py}Q${(l.source.dx + l.target.dx) / 2},${(l.source.dy + l.target.dy) / 2} ${l.target.px},${l.target.py}`);
+    ponto.attr("cx", n => n.px).attr("cy", n => n.py);
+    alvo.attr("cx", n => n.px).attr("cy", n => n.py);
+    rot.attr("x", n => n.px + Math.cos(n.a) * (raio(n) + 6)).attr("y", n => n.py + Math.sin(n.a) * (raio(n) + 6));
+    centro.attr("transform", `translate(${raiz.px},${raiz.py})`);
+  };
+  let pesos = null, inicio = null, mola = null;
+  alvo.call(d3.drag()
+    .on("start", (e, n) => {
+      if (mola) mola.stop();
+      pesos = new Map();
+      n.descendants().forEach(d => pesos.set(d, Math.max(.55, 1 - (d.depth - n.depth) * .15)));
+      let k = .5; n.ancestors().slice(1).forEach(a => { pesos.set(a, k); k *= .45; });
+      if (n.parent) n.parent.children.forEach(irmao => { if (!pesos.has(irmao)) irmao.descendants().forEach(d => pesos.has(d) || pesos.set(d, d === irmao ? .22 : .16)); });
+      ligas.forEach(l => { if (l.source === n && !pesos.has(l.target)) pesos.set(l.target, .3); if (l.target === n && !pesos.has(l.source)) pesos.set(l.source, .3); });
+      inicio = [e.x, e.y]; nos.forEach(d => { d.dx0 = d.dx; d.dy0 = d.dy; });
+    })
+    .on("drag", e => { const mx = e.x - inicio[0], my = e.y - inicio[1]; nos.forEach(d => { const w = pesos.get(d) || 0; d.dx = d.dx0 + mx * w; d.dy = d.dy0 + my * w; }); desenhar(); })
+    .on("end", () => {
+      nos.forEach(d => { d.sx = d.dx; d.sy = d.dy; });
+      const volta = d3.easeElasticOut.amplitude(1).period(.38);
+      mola = d3.timer(t => { const f = t >= 900 ? 0 : 1 - volta(t / 900); nos.forEach(d => { d.dx = d.sx * f; d.dy = d.sy * f; }); desenhar(); if (t >= 900) mola.stop(); });
+    }));
+  const focar = n => {
+    const k = Math.max(d3.zoomTransform(svgSel.node()).k, n.depth ? 1.5 : 1);
+    svgSel.transition().duration(450).call(zoomAtual.transform, n.depth ? d3.zoomIdentity.scale(k).translate(-n.px, -n.py) : d3.zoomIdentity);
+  };
+  function realcar(alvoN) {
+    if (!alvoN || !alvoN.depth) { ponto.attr("opacity", 1); gRamo.attr("opacity", 1); gLiga.attr("opacity", 1); rot.attr("opacity", 1); return; }
+    const viz = new Set([...alvoN.ancestors(), ...alvoN.descendants()].map(n => n.id));
+    ligas.forEach(l => { if (l.source === alvoN) viz.add(l.target.id); if (l.target === alvoN) viz.add(l.source.id); });
+    ponto.attr("opacity", n => viz.has(n.id) ? 1 : .14);
+    rot.attr("opacity", n => viz.has(n.id) ? 1 : .18);
+    gRamo.attr("opacity", l => viz.has(l.source.id) && viz.has(l.target.id) ? 1 : .08);
+    gLiga.attr("opacity", l => viz.has(l.source.id) && viz.has(l.target.id) ? 1 : .05);
+  }
+  alvo.on("click", (e, n) => {
+    e.stopPropagation(); realcar(n); focar(n);
+    if (!n.depth) return fecharPainel();
+    n.data.item ? previaItem(n.data.item) : previaGalho(n.cam);
+  });
+  realcarPorId = id => { const n = mapa.get(id); realcar(n || null); if (n) focar(n); };
+  svgSel.on("click", () => fecharPainel());
+  encaixe = d3.zoomIdentity;
+  svgSel.call(zoomAtual.transform, encaixe);
+  if (focoMapa) { const n = mapa.get("i" + focoMapa); if (n) setTimeout(() => { realcar(n); focar(n); previaItem(n.data.item); }, 300); focoMapa = null; }
+  $("#legenda").innerHTML = `
+<span><i style="background:${cor("--cor-destaque")}"></i>Tema</span><span><i style="background:${cor("--cor-texto")}"></i>Galho</span><span>${[1, 2, 3, 4, 5].map(n => `<i style="background:${cor("--p" + n)}"></i>`).join("")} Prioridade 1 a 5</span><span><svg width="16" height="6" aria-hidden="true"><line x1="0" y1="3" x2="16" y2="3" stroke="${cor("--cor-destaque")}" stroke-dasharray="3 3"/></svg>Ligação da IA</span>`;
+}
+function arvore(g, cor, W, H) {
+  $("#dica-mapa").textContent = "Toque num pedaço para entrar. Toque no centro para voltar.";
+  const comFora = W >= 700;
+  const R = comFora ? Math.min(H / 2 - 20, W / 2 - 250) : Math.min(W, H) / 2 - 14;
+  const raiz = d3.hierarchy(arvoreDados()).sum(d => d.item ? d.item.p : 0).sort((a, b) => b.value - a.value);
+  d3.partition().size([2 * Math.PI, raiz.height + 1])(raiz);
+  raiz.each(d => d.atual = d);
+  const aneis = [0, .24, .53, .78, .91, 1].map(f => f * R), miolo = aneis[1];
+  const rad = y => { const i = Math.floor(y); return i >= 5 ? R : aneis[i] + (aneis[i + 1] - aneis[i]) * (y - i); };
+  const arco = d3.arc().startAngle(d => d.x0).endAngle(d => d.x1).padAngle(d => Math.min((d.x1 - d.x0) / 2, .006)).padRadius(R)
+    .innerRadius(d => rad(d.y0)).outerRadius(d => Math.max(rad(d.y0), rad(d.y1) - 2));
+  const visivel = d => d.y1 <= 4.05 && d.y0 >= 1 && d.x1 > d.x0;
+  const opac = d => { const p = d.depth; return p === 1 ? 1 : p === 2 ? .62 : p === 3 ? .36 : .18; };
+  const corDe = d => d.data.item ? cor("--p" + d.data.item.p) : cor("--cor-destaque");
+  const caminhos = g.append("g").selectAll("path").data(raiz.descendants().slice(1)).join("path")
+    .attr("fill", corDe).attr("fill-opacity", d => visivel(d.atual) ? (d.data.item ? .95 : opac(d)) : 0)
+    .attr("pointer-events", d => visivel(d.atual) ? "auto" : "none").attr("d", d => arco(d.atual)).style("cursor", "pointer");
+  const nomeCurto = (s, n = 14) => s.length > n ? s.slice(0, Math.max(n - 1, 3)) + "…" : s;
+  /* rótulo corre ao longo do arco quando a fatia é larga, e pelo raio quando é estreita */
+  const tang = c => (c.x1 - c.x0) * (rad(c.y0) + rad(c.y1)) / 2 > (rad(c.y1) - rad(c.y0)) * 1.3;
+  const cabe = c => Math.max(3, Math.floor(((tang(c) ? (c.x1 - c.x0) * (rad(c.y0) + rad(c.y1)) / 2 : rad(c.y1) - rad(c.y0)) - 8) / 6.3));
+  const textos = g.append("g").attr("pointer-events", "none").attr("text-anchor", "middle").selectAll("text").data(raiz.descendants().slice(1)).join("text")
+    .attr("class", "no-texto").attr("dy", "0.35em").style("stroke", "none")
+    .attr("fill-opacity", d => +rotuloVisivel(d, d.atual)).attr("transform", d => posRotulo(d.atual)).text(d => nomeCurto(d.data.nome, cabe(d.atual)))
+    .style("fill", cor("--cor-texto"));
+  function rotuloVisivel(d, c) {
+    if (!(c.y1 <= 4.05 && c.y0 >= 1) || (comFora && d.data.item)) return false;
+    const larg = (c.x1 - c.x0) * (rad(c.y0) + rad(c.y1)) / 2, esp = rad(c.y1) - rad(c.y0);
+    if ((tang(c) ? esp : larg) < 13) return false;
+    const n = cabe(c); return d.data.nome.length <= n || n >= 8;
+  }
+  function posRotulo(c) { const x = (c.x0 + c.x1) / 2 * 180 / Math.PI, y = (rad(c.y0) + rad(c.y1)) / 2; return `rotate(${x - 90}) translate(${y},0) rotate(${tang(c) ? (x > 90 && x < 270 ? -90 : 90) : (x < 180 ? 0 : 180)})`; }
+  const centro = g.append("circle").datum(raiz).attr("r", miolo - 2).attr("fill", cor("--cor-fundo")).style("cursor", "pointer");
+  const ctxt = g.append("text").attr("class", "sol-centro").attr("text-anchor", "middle").attr("pointer-events", "none");
+  const ct1 = ctxt.append("tspan").attr("x", 0).attr("dy", "-0.2em").attr("font-weight", 800).attr("font-size", 15).attr("fill", cor("--cor-texto"));
+  const ct2 = ctxt.append("tspan").attr("x", 0).attr("dy", "1.4em").attr("font-size", 12).attr("font-weight", 600).attr("fill", cor("--cor-secundaria"));
+  function rotCentro(p) { ct1.text(nomeCurto(p.depth ? p.data.nome : "Tudo")); const n = p.leaves().filter(l => l.data.item).length; ct2.text(n + (n === 1 ? " guardado" : " guardados")); }
+  rotCentro(raiz);
+  function clicar(e, p) {
+    e.stopPropagation();
+    if (p.data.item) { previaItem(p.data.item); return; }
+    centro.datum(p.parent || raiz);
+    raiz.each(d => d.alvo = {x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI, x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI, y0: Math.max(0, d.y0 - p.depth), y1: Math.max(0, d.y1 - p.depth)});
+    const t = g.transition().duration(550).ease(d3.easeCubicOut);
+    caminhos.transition(t).tween("data", d => { const i = d3.interpolate(d.atual, d.alvo); return s => d.atual = i(s); })
+      .filter(function (d) { return +this.getAttribute("fill-opacity") || visivel(d.alvo); })
+      .attr("fill-opacity", d => visivel(d.alvo) ? (d.data.item ? .95 : opac({depth: d.depth - p.depth})) : 0)
+      .attr("pointer-events", d => visivel(d.alvo) ? "auto" : "none").attrTween("d", d => () => arco(d.atual));
+    textos.filter(function (d) { return +this.getAttribute("fill-opacity") || rotuloVisivel(d, d.alvo); }).transition(t)
+      .attr("fill-opacity", d => +rotuloVisivel(d, d.alvo)).attrTween("transform", d => () => posRotulo(d.atual)).text(d => nomeCurto(d.data.nome, cabe(d.alvo)))
+    rotCentro(p);
+    voltarArvore(p);
+    if (p.depth) { const cam = []; let n = p; while (n.depth) { cam.unshift(n.data.nome); n = n.parent; } previaGalho(cam); } else fecharPainel();
+  }
+  function voltarArvore(p) {
+    const b = $("#arvore-voltar");
+    if (!p.depth) { b.hidden = true; return; }
+    b.hidden = false; b.querySelector("span").textContent = "Voltar para " + (p.parent.depth ? p.parent.data.nome : "todos os temas");
+    b.onclick = e => { fora.selectAll("*").remove(); clicar(e, p.parent); setTimeout(desenharFora, 600); };
+  }
+  /* rótulos por fora do círculo para os conhecimentos (computador, até 12 visíveis) */
+  const fora = g.append("g").attr("class", "fora");
+  const quebrar = (t, n, max) => { const ls = []; let l = ""; t.split(" ").forEach(w => { if ((l + " " + w).trim().length > n) { ls.push(l.trim()); l = w; } else l += " " + w; }); ls.push(l.trim()); return ls.length > max ? ls.slice(0, max - 1).concat([ls[max - 1] + "…"]) : ls; };
+  function desenharFora() {
+    fora.selectAll("*").remove();
+    if (!comFora) return;
+    const pos = d => d.alvo || d.atual;
+    const folhas = raiz.descendants().filter(d => d.data.item && visivel(pos(d)) && pos(d).x1 - pos(d).x0 > .001);
+    if (!folhas.length || folhas.length > 12) return;
+    const os = folhas.map(d => { const c = pos(d), a = (c.x0 + c.x1) / 2 - Math.PI / 2, r = rad(c.y1) - 2; return {d, a, x0: Math.cos(a) * r, y0: Math.sin(a) * r, lado: Math.cos(a) >= 0 ? 1 : -1, y: Math.sin(a) * (R + 16), txt: quebrar(d.data.item.t, 36, 3)}; });
+    [1, -1].forEach(l => {
+      const lado = os.filter(o => o.lado === l).sort((a, b) => a.y - b.y); let min = -H / 2 + 14;
+      lado.forEach(o => { o.y = Math.max(o.y, min); min = o.y + o.txt.length * 15 + 12; });
+      const sobra = min - (H / 2 - 6); if (sobra > 0) lado.forEach(o => o.y -= sobra);
+    });
+    os.forEach(o => {
+      const xl = o.lado * (R + 30), gr = fora.append("g").style("cursor", "pointer").on("click", e => { e.stopPropagation(); previaItem(o.d.data.item); });
+      gr.append("path").attr("d", `M${o.x0},${o.y0}L${Math.cos(o.a) * (R + 10)},${Math.sin(o.a) * (R + 10)}L${xl - o.lado * 6},${o.y}`).attr("fill", "none").attr("stroke", cor("--cor-apagada"));
+      gr.append("circle").attr("cx", o.x0).attr("cy", o.y0).attr("r", 3).attr("fill", cor("--cor-texto"));
+      const t = gr.append("text").attr("class", "fora-texto").attr("text-anchor", o.lado > 0 ? "start" : "end").attr("y", o.y);
+      o.txt.forEach((linha, i) => t.append("tspan").attr("x", xl).attr("dy", i ? "1.25em" : "0.35em").text(linha));
+    });
+  }
+  const clicarBase = clicar;
+  const clicarComFora = (e, p) => { fora.selectAll("*").remove(); clicarBase(e, p); if (!p.data.item) setTimeout(desenharFora, 600); };
+  caminhos.on("click", clicarComFora); centro.on("click", clicarComFora);
+  desenharFora();
+  $("#legenda").innerHTML = `<span>Cada anel é um nível, do tema ao conhecimento. Quanto mais laranja, mais importante.</span>`;
+}
+let redim; addEventListener("resize", () => { clearTimeout(redim); redim = setTimeout(() => telaAtual === "mapa" && desenharMapa(), 250); });
+
+/* ---------- TEMPO ---------- */
+let mesSel = null, temaSel = null;
+const itemTrilha = x => { const d = new Date(x.d + "T12:00:00"); return `<div class="marco${x.p === 5 ? " p5" : ""}" style="--pc:var(--p${x.p})"><span class="marco-dia" aria-hidden="true"><strong class="num">${d.getDate()}</strong><small>${d.toLocaleDateString("pt-BR", {month: "short"}).replace(".", "")}</small></span>${itemBloco(x)}</div>`; };
+function desenharTempo() {
+  const meses = [];
+  for (let i = 12; i >= 0; i--) { const d = new Date(HOJE.getFullYear(), HOJE.getMonth() - i, 1); meses.push(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0")); }
+  const cont = meses.map(m => D.filter(x => x.d.startsWith(m)).length), max = Math.max(...cont, 1);
+  const nomeMes = (m, f) => new Date(m + "-15T12:00:00").toLocaleDateString("pt-BR", f);
+  $("#meses").innerHTML = meses.map((m, i) => `<button aria-pressed="${m === mesSel}" data-m="${m}" aria-label="${nomeMes(m, {month: "long", year: "numeric"})}: ${cont[i]}"><i style="height:${cont[i] / max * 100}%;animation-delay:${i * 35}ms"></i></button>`).join("");
+  $("#meses-nomes").innerHTML = meses.map(m => `<span>${nomeMes(m, {month: "short"}).replace(".", "").slice(0, 3)}</span>`).join("");
+  $$("#meses button").forEach(b => b.onclick = () => { mesSel = mesSel === b.dataset.m ? null : b.dataset.m; desenharTempo(); });
+  const temas = [...new Set(D.map(x => x.c[0]))];
+  $("#filtro-temas").innerHTML = ["Todos", ...temas].map(t => `<button data-tema="${t}" aria-pressed="${(temaSel || "Todos") === t}">${t}</button>`).join("");
+  $$("#filtro-temas button").forEach(b => b.onclick = () => { temaSel = b.dataset.tema === "Todos" ? null : b.dataset.tema; desenharTempo(); });
+  const lista = meses.filter(m => !mesSel || m === mesSel).reverse().map(m => {
+    const itens = D.filter(x => x.d.startsWith(m) && (!temaSel || x.c[0] === temaSel)).sort((a, b) => b.d.localeCompare(a.d));
+    if (!itens.length) return "";
+    return `<section class="mes"><header class="mes-lado"><h3>${nomeMes(m, {month: "long"})}<span>${m.slice(0, 4)}</span></h3><span class="sec num">${itens.length} ${itens.length === 1 ? "registro" : "registros"}</span></header><div class="trilha">${itens.map(itemTrilha).join("")}</div></section>`;
+  }).join("");
+  $("#tempo-lista").innerHTML = (mesSel ? `<p style="margin-top:20px"><button class="link" id="mes-limpar">Mostrar todos os meses</button></p>` : "") + (lista || `<div class="vazio"><h3>Nada registrado nesse mês.</h3><button class="link" data-ir="registrar">Registrar agora</button></div>`);
+  if ($("#mes-limpar")) $("#mes-limpar").onclick = () => { mesSel = null; desenharTempo(); };
+}
+
+/* ---------- BUSCAR ---------- */
+const SINONIMOS = {vendas: ["venda", "vender", "cliente", "preço", "proposta", "oferta"], dinheiro: ["finanças", "dinheiro", "juros", "reserva", "caixa", "riqueza"], casamento: ["casamento", "relacionamento"], sono: ["sono", "dormir"], "hábitos": ["hábito", "hábitos", "ambiente"]};
+function buscar(q) {
+  q = q.trim(); const box = $("#resposta");
+  if (!q) { box.innerHTML = `<p class="erro" style="margin-top:16px">Escreva o que você quer lembrar.</p>`; return; }
+  const chave = Object.keys(SINONIMOS).find(k => q.toLowerCase().includes(k.replace("s", "")) || q.toLowerCase().includes(k));
+  const termos = chave ? SINONIMOS[chave] : q.toLowerCase().split(/\s+/).filter(t => t.length > 3);
+  const achou = D.filter(x => termos.some(t => textoTodo(x).toLowerCase().includes(t))).sort((a, b) => b.p - a.p);
+  if (!achou.length) { box.innerHTML = `<div class="vazio"><h2>Ainda não tem nada sobre isso.</h2><p class="sec">Quando você registrar, ele aparece aqui.</p><button class="link" data-ir="registrar">Registrar agora</button></div>`; return; }
+  const galhos = [...new Set(achou.map(x => x.c.slice(0, 2).join(" › ")))];
+  box.innerHTML = `<div class="resposta">
+    <span class="rotulo">Resposta</span>
+    <p class="texto">Você registrou <em>${achou.length} ${achou.length === 1 ? "coisa" : "coisas"}</em> sobre isso, em ${galhos.length === 1 ? "um galho" : galhos.length + " galhos"}. A mais importante: ${esc(achou[0].t.charAt(0).toLowerCase() + achou[0].t.slice(1))}</p>
+    <span class="sec">Na versão real, a IA escreve essa resposta juntando seus registros e mostra de onde tirou cada parte.</span>
+    <div class="bloco-topo" style="margin-top:14px;border-bottom-color:var(--cor-linha)"><h3>De onde veio</h3><span class="sec num">${achou.length}</span></div>
+    <div class="grade">${achou.map(itemBloco).join("")}</div></div>`;
+}
+$("#form-busca").onsubmit = e => { e.preventDefault(); buscar($("#q").value); };
+$("#q").oninput = () => { const e = $("#resposta .erro"); if (e) e.remove(); };
+$$("[data-q]").forEach(b => b.onclick = () => { $("#q").value = b.dataset.q; buscar(b.dataset.q); });
+
+/* ---------- ASSISTENTE: a IA responde só com a sua base ---------- */
+const historico = [];
+function formatarResposta(t) {
+  let html = "", lista = [];
+  const solta = () => { if (lista.length) { html += `<ul>${lista.map(l => `<li>${l}</li>`).join("")}</ul>`; lista = []; } };
+  for (const l of esc(t).split(/\n+/)) { const m = l.match(/^\s*[-•*]\s+(.*)/); if (m) lista.push(m[1]); else { solta(); if (l.trim()) html += `<p>${l}</p>`; } }
+  solta();
+  return html.replace(/\s*\[#(\d+)\]/g, (_, id) => `<button class="ref" data-abrir-item="${id}" aria-label="Abrir conhecimento ${id}">${id}</button>`);
+}
+async function perguntar(q) {
+  q = q.trim(); if (!q) return;
+  $("#ideias").hidden = true;
+  const chat = $("#chat");
+  chat.insertAdjacentHTML("beforeend", `<div class="msg eu"><span class="msg-quem">Você</span><div class="msg-texto">${esc(q)}</div></div><div class="msg ia"><span class="msg-quem">Assistente</span><div class="msg-texto"><span class="digitando" aria-label="Pensando"><i></i><i></i><i></i></span></div></div>`);
+  const alvo = chat.lastElementChild.querySelector(".msg-texto");
+  alvo.scrollIntoView({block: "end", behavior: "smooth"});
+  try {
+    const d = await api("/api/assistente", {method: "POST", json: {pergunta: q, historico}});
+    historico.push({quem: "eu", texto: q}, {quem: "ia", texto: d.resposta});
+    const itens = d.ids.map(porId).filter(Boolean);
+    alvo.innerHTML = formatarResposta(d.resposta) + (itens.length ? `<p class="sec">De onde tirei (toque para ver completo):</p><div class="grade">${itens.map(itemBloco).join("")}</div>` : "");
+  } catch (e) { alvo.innerHTML = `<p class="erro">${esc(e.message)}</p>`; }
+  alvo.scrollIntoView({block: "nearest", behavior: "smooth"});
+}
+$("#form-chat").onsubmit = e => { e.preventDefault(); perguntar($("#msg").value); $("#msg").value = ""; $("#msg").style.height = ""; };
+$("#msg").addEventListener("keydown", e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); $("#form-chat").requestSubmit(); } });
+$("#msg").addEventListener("input", e => { e.target.style.height = "auto"; e.target.style.height = Math.min(e.target.scrollHeight, 140) + "px"; });
+$$("[data-pergunta]").forEach(b => b.onclick = () => perguntar(b.dataset.pergunta));
+let pararChat = null;
+$("#mic").onclick = async () => {
+  if (pararChat) return pararChat();
+  const mic = $("#mic"), campo = $("#msg");
+  try {
+    const texto = await gravarETranscrever({
+      aoComecar: parar => { pararChat = parar; mic.classList.add("gravando"); mic.setAttribute("aria-label", "Parar de gravar"); campo.placeholder = "Ouvindo… toque de novo para parar"; },
+      aoTranscrever: () => { pararChat = null; mic.classList.remove("gravando"); campo.placeholder = "Transcrevendo…"; },
+    });
+    campo.value = (campo.value.trim() + " " + texto).trim(); campo.dispatchEvent(new Event("input"));
+  } catch (e) { campo.placeholder = e.name === "NotAllowedError" ? "Libere o microfone para falar" : e.message; }
+  pararChat = null; mic.classList.remove("gravando"); mic.setAttribute("aria-label", "Falar a pergunta");
+  if (!campo.placeholder.startsWith("Libere")) campo.placeholder = "O que quer lembrar?"; campo.focus();
+};
+
+/* ---------- começa: busca a base e abre a tela ---------- */
+carregarBase().then(rotear).catch(e => {
+  $("main").innerHTML = `<div class="vazio"><h2>Não consegui abrir sua base.</h2><p class="sec">${esc(e.message)}</p><button class="botao" onclick="location.reload()"><span>Tentar de novo</span><span class="seta"><i class="ti ti-refresh" aria-hidden="true"></i></span></button></div>`;
+});
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
+</script>
+</body>
+</html>

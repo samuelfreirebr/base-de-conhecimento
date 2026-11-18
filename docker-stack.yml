@@ -1,0 +1,53 @@
+# ============================================================
+#  Stack do Portainer (Swarm): Base de conhecimento pessoal.
+#  Portainer → Stacks → Add stack → Web editor → colar → variáveis → Deploy.
+#
+#  Variáveis:
+#    SENHA_APP           obrigatória: a senha para entrar no app
+#    TOKEN_API           chave do MCP do Claude e de outros sistemas
+#                        (cabeçalho x-token): lê, cria e edita, nunca apaga
+#    OPENROUTER_API_KEY  a IA (organizar, foto, áudio, PDF, assistente)
+#    OPENROUTER_MODELO   opcional; vazio usa google/gemini-2.5-flash
+#
+#  Na Cloudflare, o registro de conhecimento.samuelfreire.com.br precisa
+#  estar com a nuvem CINZA (DNS only), senão o certificado não sai.
+#  Atualizar: git push → Action verde → Update the stack com "Re-pull image".
+#  O volume conhecimento_dados guarda a base e não é tocado em update.
+# ============================================================
+
+services:
+  app:
+    image: ghcr.io/samuelfreirebr/base-de-conhecimento:latest
+    networks:
+      - SamuelFreire_RedeInterna
+    environment:
+      - HOSTNAME=0.0.0.0
+      - PORTA=3000
+      - PASTA_SITE=/app/site
+      - PASTA_DADOS=/dados
+      - SENHA_APP=${SENHA_APP:?defina SENHA_APP nas variaveis da stack}
+      - TOKEN_API=${TOKEN_API:-}
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY:-}
+      - OPENROUTER_MODELO=${OPENROUTER_MODELO:-}
+    volumes:
+      - conhecimento_dados:/dados
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - traefik.enable=true
+        - traefik.docker.network=SamuelFreire_RedeInterna
+        - traefik.http.routers.conhecimento.rule=Host(`conhecimento.samuelfreire.com.br`)
+        - traefik.http.routers.conhecimento.entrypoints=websecure
+        - traefik.http.routers.conhecimento.tls.certresolver=letsencryptresolver
+        - traefik.http.routers.conhecimento.service=conhecimento
+        - traefik.http.services.conhecimento.loadbalancer.server.port=3000
+
+volumes:
+  conhecimento_dados:
+
+networks:
+  SamuelFreire_RedeInterna:
+    external: true

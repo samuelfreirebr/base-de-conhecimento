@@ -1,0 +1,6 @@
+.git
+.github
+mcp
+dados-local
+.env*
+*.md

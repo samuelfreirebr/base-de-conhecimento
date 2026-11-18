@@ -1,0 +1,44 @@
+# Toda vez que chega código na main: confere o servidor, monta a imagem e
+# publica no ghcr.io. Primeira vez: o pacote nasce PRIVADO; deixe público em
+# github.com → Packages → base-de-conhecimento → Package settings → Change visibility.
+name: Publicar imagem
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  packages: write
+jobs:
+  publicar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Conferir o servidor
+        run: |
+          for f in servidor/*.js; do node --check "$f"; done
+          node servidor/srs.teste.js
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Nome da imagem
+        id: nome
+        run: echo "imagem=ghcr.io/$(echo '${{ github.repository_owner }}' | tr '[:upper:]' '[:lower:]')/base-de-conhecimento" >> "$GITHUB_OUTPUT"
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          tags: |
+            ${{ steps.nome.outputs.imagem }}:latest
+            ${{ steps.nome.outputs.imagem }}:${{ github.sha }}
+      # Se o secret PORTAINER_WEBHOOK existir, o Portainer atualiza sozinho.
+      - name: Atualizar no Portainer
+        env:
+          WEBHOOK: ${{ secrets.PORTAINER_WEBHOOK }}
+        if: env.WEBHOOK != ''
+        run: curl -fsS -X POST "$WEBHOOK"
