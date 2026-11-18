@@ -76,6 +76,8 @@ async function registrar(d) {
     tipo: d.tipo || 'texto', p: escolhida >= 1 && escolhida <= 5 ? escolhida : org.prioridade, pIA: org.prioridade,
     extras: { ...(base.ehUrl(String(d.url || '').trim()) ? { url: String(d.url).trim() } : {}), ...(/^[a-f0-9]{24}\.jpg$/.test(d.imagem || '') ? { imagem: d.imagem } : {}) },
   });
+  /* importação: data em que foi escrito (aaaa-mm-dd, nunca no futuro) */
+  if (/^\d{4}-\d{2}-\d{2}$/.test(d.data || '') && d.data < item.d) { item.d = d.data; item.criado = d.data + 'T12:00:00'; }
   org.ligacoes.forEach((id) => base.ligar(item.id, id));
   await base.salvar();
   const galhoNovo = !arvoreAntes[item.c.slice(0, 2).join(' > ')];
