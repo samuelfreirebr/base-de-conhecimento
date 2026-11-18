@@ -1422,9 +1422,11 @@ async function desenharMapa() {
   const W = $("#palco").clientWidth, H = $("#palco").clientHeight;
   svg.attr("viewBox", [-W / 2, -H / 2, W, H]);
   const g = svg.append("g");
+  let zq = 0, zt = null;
   zoomAtual = d3.zoom().scaleExtent([.4, 5])
     .filter(e => (!e.ctrlKey || e.type === "wheel") && !e.button && (e.type !== "touchstart" || e.touches.length > 1))
-    .on("zoom", e => { g.attr("transform", e.transform); if (aoZoom) aoZoom(e.transform.k); });
+    /* um desenho por quadro, por mais eventos de pinça/roda que cheguem */
+    .on("zoom", e => { zt = e.transform; if (!zq) zq = requestAnimationFrame(() => { zq = 0; g.attr("transform", zt); if (aoZoom) aoZoom(zt.k); }); });
   svg.call(zoomAtual).on("dblclick.zoom", null);
   $("#mapa-conta").innerHTML = `${D.length} ${D.length === 1 ? "conhecimento" : "conhecimentos"}<span class="so-pc-inline"> · ${new Set(D.map(x => x.c[0])).size} temas</span>`;
   const cs = getComputedStyle(document.documentElement), cor = v => cs.getPropertyValue(v).trim();
@@ -1472,7 +1474,7 @@ function grafo(g, cor, W, H) {
     .attr("stroke", cor("--cor-fundo-2")).attr("stroke-width", n => n.depth === 0 ? 6 : n.data.item ? Math.max(1, 2 * dens) : 2).attr("pointer-events", "none");
   /* cérebro no centro */
   const centro = g.append("g").attr("pointer-events", "none");
-  centro.append("text").attr("text-anchor", "middle").attr("dy", "0.36em").attr("font-family", "tabler-icons").attr("font-size", 38 * Math.max(dens, .75)).attr("fill", "#fff").text("");
+  centro.append("text").attr("text-anchor", "middle").attr("dominant-baseline", "central").attr("font-family", "tabler-icons").attr("font-size", 38 * Math.max(dens, .75)).attr("fill", "#fff").text("");
   const rotDados = nos.filter(n => n.depth && !n.data.item && (W >= 600 || n.depth < 3));
   const fonteBase = n => (n.depth === 1 ? 13 : W < 600 && n.depth > 1 ? 10 : 11) * Math.max(.8, Math.sqrt(dens));
   const fazRot = cls => g.append("g").selectAll("text").data(rotDados).join("text").style("font-size", n => fonteBase(n) + "px")
@@ -1507,9 +1509,9 @@ function grafo(g, cor, W, H) {
     ponto.attr("cx", n => n.px).attr("cy", n => n.py);
     alvo.attr("cx", n => n.px).attr("cy", n => n.py);
     rot.attr("x", n => n.px + Math.cos(n.a) * (raio(n) + 6) / kTela).attr("y", n => n.py + Math.sin(n.a) * (raio(n) + 6) / kTela);
-    centro.attr("transform", `translate(${raiz.px},${raiz.py})`);
+    centro.attr("transform", `translate(${raiz.px},${raiz.py}) scale(${1 / kTela})`);
   };
-  let pesos = null, inicio = null, mola = null;
+  let pesos = null, inicio = null, mola = null, dq = 0;
   if (!matchMedia("(pointer: coarse)").matches) alvo.call(d3.drag()
     .on("start", (e, n) => {
       if (mola) mola.stop();
@@ -1520,7 +1522,7 @@ function grafo(g, cor, W, H) {
       ligas.forEach(l => { if (l.source === n && !pesos.has(l.target)) pesos.set(l.target, .3); if (l.target === n && !pesos.has(l.source)) pesos.set(l.source, .3); });
       inicio = [e.x, e.y]; nos.forEach(d => { d.dx0 = d.dx; d.dy0 = d.dy; });
     })
-    .on("drag", e => { const mx = e.x - inicio[0], my = e.y - inicio[1]; nos.forEach(d => { const w = pesos.get(d) || 0; d.dx = d.dx0 + mx * w; d.dy = d.dy0 + my * w; }); desenhar(); })
+    .on("drag", e => { const mx = e.x - inicio[0], my = e.y - inicio[1]; nos.forEach(d => { const w = pesos.get(d) || 0; d.dx = d.dx0 + mx * w; d.dy = d.dy0 + my * w; }); if (!dq) dq = requestAnimationFrame(() => { dq = 0; desenhar(); }); })
     .on("end", () => {
       nos.forEach(d => { d.sx = d.dx; d.sy = d.dy; });
       const volta = d3.easeElasticOut.amplitude(1).period(.38);
@@ -1547,14 +1549,17 @@ function grafo(g, cor, W, H) {
   realcarPorId = id => { const n = mapa.get(id); realcar(n || null); if (n) focar(n); };
 
   /* zoom: divide os tamanhos pelo zoom, para continuarem iguais na tela */
+  /* zoom: só tamanhos e nomes mudam (os caminhos não precisam ser refeitos); os nomes se arrumam quando o gesto para */
+  let fimZoom = 0;
   aoZoom = k => {
     kTela = k;
     ponto.attr("r", n => raio(n) / k);
     alvo.attr("r", n => (raio(n) + (n.data.item ? 7 : 10)) / k);
-    rot.style("font-size", n => fonteBase(n) / k + "px").filter(".halo").style("stroke-width", 4 / k + "px");
-    centro.select("text").attr("font-size", 38 * Math.max(dens, .75) / k);
-    desenhar();
-    arrumarRotulos();
+    rot.style("font-size", n => fonteBase(n) / k + "px")
+      .attr("x", n => n.px + Math.cos(n.a) * (raio(n) + 6) / k).attr("y", n => n.py + Math.sin(n.a) * (raio(n) + 6) / k);
+    rot.filter(".halo").style("stroke-width", 4 / k + "px");
+    centro.attr("transform", `translate(${raiz.px},${raiz.py}) scale(${1 / k})`);
+    clearTimeout(fimZoom); fimZoom = setTimeout(arrumarRotulos, 160);
   };
   encaixe = d3.zoomIdentity;
   svgSel.call(zoomAtual.transform, encaixe);
