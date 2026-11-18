@@ -1439,6 +1439,8 @@ function grafo(g, cor, W, H) {
   let RX = W / 2 - (W < 600 ? 42 : 120), RY = H / 2 - (W < 600 ? 38 : 46);
   if (W < 600) RX = RY = Math.min(RX, RY);
   const nivelR = [0, .34, .62, .84];
+  /* temas pequenos nascem colados: abre um espaço mínimo entre eles */
+  (raiz.children || []).slice().sort((a, b) => a.x - b.x).forEach((t, i, v) => { if (i && t.x - v[i - 1].x < .6) t.x = v[i - 1].x + .6; });
   raiz.each(n => {
     n.r = n.depth === 0 ? 0 : n.data.item ? 1 : nivelR[Math.min(n.depth, 3)];
     n.a = n.x - Math.PI / 2;
@@ -1452,7 +1454,9 @@ function grafo(g, cor, W, H) {
   const ramos = raiz.links();
   const ligas = L.map(([a, b]) => ({source: mapa.get("i" + a), target: mapa.get("i" + b)})).filter(l => l.source && l.target);
   let kTela = 1;
-  const raio = n => n.depth === 0 ? 36 : n.data.item ? 3 + n.data.item.p * .9 : n.depth === 1 ? 13 : n.depth === 2 ? 6.5 : 4.5;
+  /* densidade: quanto mais pontos na borda, menores as bolinhas e os nomes (1 = folgado) */
+  const folhas = nos.filter(n => !n.children).length, dens = Math.max(.4, Math.min(1, 2 * Math.PI * Math.min(RX, RY) / Math.max(folhas, 1) / 16)), dMin = Math.max(dens, .65);
+  const raio = n => n.depth === 0 ? 36 * Math.max(dens, .75) : n.data.item ? (3 + n.data.item.p * .9) * dens : (n.depth === 1 ? 13 : n.depth === 2 ? 6.5 : 4.5) * dMin;
 
   const gLiga = g.append("g").attr("fill", "none").selectAll("path").data(ligas).join("path")
     .attr("d", l => `M${l.source.px},${l.source.py}Q0,0 ${l.target.px},${l.target.py}`)
@@ -1465,12 +1469,12 @@ function grafo(g, cor, W, H) {
   const ponto = g.append("g").selectAll("circle").data(nos).join("circle")
     .attr("cx", n => n.px).attr("cy", n => n.py).attr("r", raio)
     .attr("fill", n => n.depth === 0 || n.depth === 1 && !n.data.item ? cor("--cor-destaque") : n.data.item ? cor("--p" + n.data.item.p) : cor("--cor-texto"))
-    .attr("stroke", cor("--cor-fundo-2")).attr("stroke-width", n => n.depth === 0 ? 6 : 2).attr("pointer-events", "none");
+    .attr("stroke", cor("--cor-fundo-2")).attr("stroke-width", n => n.depth === 0 ? 6 : n.data.item ? Math.max(1, 2 * dens) : 2).attr("pointer-events", "none");
   /* cérebro no centro */
   const centro = g.append("g").attr("pointer-events", "none");
-  centro.append("text").attr("text-anchor", "middle").attr("dy", "0.36em").attr("font-family", "tabler-icons").attr("font-size", 38).attr("fill", "#fff").text("");
+  centro.append("text").attr("text-anchor", "middle").attr("dy", "0.36em").attr("font-family", "tabler-icons").attr("font-size", 38 * Math.max(dens, .75)).attr("fill", "#fff").text("");
   const rotDados = nos.filter(n => n.depth && !n.data.item && (W >= 600 || n.depth < 3));
-  const fonteBase = n => n.depth === 1 ? 13 : W < 600 && n.depth > 1 ? 10 : 11;
+  const fonteBase = n => (n.depth === 1 ? 13 : W < 600 && n.depth > 1 ? 10 : 11) * Math.max(.8, Math.sqrt(dens));
   const fazRot = cls => g.append("g").selectAll("text").data(rotDados).join("text").style("font-size", n => fonteBase(n) + "px")
     .attr("class", n => "no-texto" + (n.depth === 1 ? " tema" : "") + cls)
     .attr("x", n => n.px + Math.cos(n.a) * (raio(n) + 6)).attr("y", n => n.py + Math.sin(n.a) * (raio(n) + 6))
@@ -1478,6 +1482,19 @@ function grafo(g, cor, W, H) {
     .attr("dy", n => Math.abs(Math.cos(n.a)) <= .25 ? (Math.sin(n.a) > 0 ? "1em" : "-.4em") : "0.35em")
     .text(n => n.data.nome);
   const rot = d3.selectAll([...fazRot(" halo").nodes(), ...fazRot("").nodes()]);
+  /* nome que bate em outro some (fica o do tema maior); ao dar zoom os pontos se afastam e ele volta */
+  const textos = rot.filter(function () { return !this.classList.contains("halo"); }).nodes().sort((a, b) => a.__data__.depth - b.__data__.depth || b.__data__.value - a.__data__.value);
+  let quadro = 0;
+  const arrumarRotulos = () => { cancelAnimationFrame(quadro); quadro = requestAnimationFrame(() => {
+    rot.attr("display", null);
+    const caixas = [], esconder = new Set(), f = 2 / kTela;
+    textos.forEach(el => {
+      const b = el.getBBox(), n = el.__data__;
+      if (caixas.some(c => b.x < c.x + c.width + f && c.x < b.x + b.width + f && b.y < c.y + c.height && c.y < b.y + b.height)) esconder.add(n);
+      else caixas.push(b);
+    });
+    rot.attr("display", n => esconder.has(n) ? "none" : null);
+  }); };
   const alvo = g.append("g").selectAll("circle").data(nos).join("circle")
     .attr("cx", n => n.px).attr("cy", n => n.py).attr("r", n => raio(n) + (n.data.item ? 7 : 10))
     .attr("fill", "transparent").style("cursor", "pointer");
@@ -1535,8 +1552,9 @@ function grafo(g, cor, W, H) {
     ponto.attr("r", n => raio(n) / k);
     alvo.attr("r", n => (raio(n) + (n.data.item ? 7 : 10)) / k);
     rot.style("font-size", n => fonteBase(n) / k + "px").filter(".halo").style("stroke-width", 4 / k + "px");
-    centro.select("text").attr("font-size", 38 / k);
+    centro.select("text").attr("font-size", 38 * Math.max(dens, .75) / k);
     desenhar();
+    arrumarRotulos();
   };
   encaixe = d3.zoomIdentity;
   svgSel.call(zoomAtual.transform, encaixe);
