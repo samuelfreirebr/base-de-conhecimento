@@ -341,7 +341,9 @@ textarea:focus, input:focus { outline: none; border-color: var(--cor-texto); }
 body[data-tela="mapa"] main { max-width: none; }
 @media (min-width: 900px) { main { width: 100%; } }
 @media (min-width: 900px) { body[data-tela="mapa"] main { padding: 28px 28px 40px; } body[data-tela="mapa"] #tela-mapa .cabeca { margin-bottom: 14px; }  }
-.palco { position: relative; height: auto; aspect-ratio: 1 / 1.08; max-height: 64dvh; border-radius: var(--raio-bloco); margin: 0; background: var(--cor-fundo-2); overflow: hidden; touch-action: none; }
+.palco svg circle { touch-action: none; }
+.palco svg path, .palco svg circle { vector-effect: non-scaling-stroke; }
+.palco { position: relative; height: auto; aspect-ratio: 1 / 1.08; max-height: 64dvh; border-radius: var(--raio-bloco); margin: 0; background: var(--cor-fundo-2); overflow: hidden; touch-action: pan-y; }
 @media (min-width: 900px) { .palco { aspect-ratio: auto; max-height: none; height: max(440px, calc(100dvh - 300px)); margin: 0; border-radius: var(--raio-bloco); } }
 .palco svg { width: 100%; height: 100%; display: block; }
 .dica { display: block; margin: 10px 0 0; font-size: 11.5px; color: var(--cor-secundaria); font-weight: 600; }
@@ -411,9 +413,9 @@ button.barra:hover > span:first-child { color: var(--cor-destaque); }
 .mes-lado h3::first-letter { text-transform: uppercase; }
 .mes-lado h3 span { color: var(--cor-secundaria); font-weight: 600; margin-left: 6px; }
 .grade { display: grid; gap: 10px; }
-@media (min-width: 700px) { .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (min-width: 700px) { .grade, main .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 900px) {
-  .mes { grid-template-columns: 170px minmax(0, 1fr); gap: 28px; margin-top: 36px; }
+  .mes, main .mes { grid-template-columns: 170px minmax(0, 1fr); gap: 28px; margin-top: 36px; }
   .mes-lado { top: 24px; align-self: start; display: grid; gap: 6px; padding: 4px 0 0; border: 0; }
   .mes-lado h3 span { display: block; margin: 2px 0 0; font-size: .9375rem; }
 }
@@ -453,7 +455,7 @@ button.barra:hover > span:first-child { color: var(--cor-destaque); }
 .marco.p5 .marco-dia strong { color: var(--cor-destaque); }
 .trilha .item-dia { display: none; }
 @media (min-width: 1000px) {
-  .trilha { padding-left: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 84px; row-gap: 14px; }
+  .trilha, main .trilha { padding-left: 0; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 84px; row-gap: 14px; }
   .trilha::before { left: 50%; }
   .marco:nth-child(odd) { grid-column: 1; }
   .marco:nth-child(even) { grid-column: 2; margin-top: 64px; }
@@ -476,7 +478,7 @@ button.barra:hover > span:first-child { color: var(--cor-destaque); }
 @keyframes pula { 50% { transform: translateY(-5px); background: var(--cor-texto); } }
 .ideias { display: grid; gap: 8px; margin-bottom: 18px; }
 .ideias[hidden] { display: none; }
-@media (min-width: 700px) { .ideias { grid-template-columns: 1fr 1fr; } }
+@media (min-width: 700px) { .ideias, main .ideias { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .ideias button { text-align: left; border: var(--linha) solid var(--cor-linha); border-radius: var(--raio-campo); padding: 14px 16px; font-weight: 600; font-size: .9375rem; display: flex; justify-content: space-between; align-items: center; gap: 12px; transition: border-color var(--velocidade); }
 .ideias button:hover { border-color: var(--cor-texto); }
 .ideias button i { color: var(--cor-destaque); font-size: 18px; flex: none; }
@@ -553,6 +555,14 @@ button.metrica:hover .ir i { transform: translateX(3px); }
 .recentes-fonte button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .recentes-fonte button i { font-size: 15px; flex: none; }
 
+/* Nada passa da largura da tela (grade sem "min-content" estourando) */
+html, body { overflow-x: clip; max-width: 100%; }
+main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .resposta { min-width: 0; }
+.grade, .mes, .trilha, .conteudo-grade, .ideias { grid-template-columns: minmax(0, 1fr); }
+.item, .marco, .leitura, .ficha-lado, .texto-lido, .resposta, .msg, .pergunta, .comum, .painel, .campo, .previa, .cabeca, .detalhe { grid-template-columns: minmax(0, 1fr); }
+.pergunta > *, .comum > *, .painel > * { min-width: 0; }
+.item p, .previa-t, .conteudo-titulo, .corpo, .msg-texto, .caminho, .trechos .txt { overflow-wrap: anywhere; }
+
 /* Leitura do conhecimento */
 .foto-item { display: block; margin: 0 0 20px; max-width: 560px; }
 .foto-item img { display: block; width: 100%; border-radius: 14px; border: var(--linha) solid var(--cor-linha); }
@@ -564,7 +574,7 @@ button.metrica:hover .ir i { transform: translateX(3px); }
 .conteudo-titulo { font-size: clamp(1.375rem, 2.4vw, 1.875rem); line-height: 1.25; margin-bottom: 18px; max-width: 34ch; }
 .conteudo-titulo.menor { font-size: clamp(1.25rem, 2.2vw, 1.625rem); }
 .conteudo-grade { display: grid; gap: 26px; }
-@media (min-width: 1100px) { .conteudo-grade { grid-template-columns: minmax(0, 1fr) 300px; gap: 56px; align-items: start; } .ficha-lado { position: sticky; top: 24px; } }
+@media (min-width: 1100px) { .conteudo-grade, main .conteudo-grade { grid-template-columns: minmax(0, 1fr) 300px; gap: 56px; align-items: start; } .ficha-lado { position: sticky; top: 24px; } }
 .leitura { max-width: 72ch; }
 .corpo { display: grid; gap: 16px; }
 .corpo > p { font-size: 1.0625rem; line-height: 1.75; color: var(--cor-texto-2); }
@@ -885,7 +895,9 @@ const itemLista = x => `<li class="abre" data-abrir-item="${x.id}" tabindex="0" 
 
 /* ---------- Navegação ---------- */
 let telaAtual = "";
+let mapaRolagem = 0;
 function mostrar(nome) {
+  if (telaAtual === "mapa") mapaRolagem = window.scrollY;
   fecharPainel();
   $$(".tela").forEach(s => s.hidden = s.id !== "tela-" + nome);
   const marcado = nome === "conteudo" ? voltarPara : nome;
@@ -897,7 +909,7 @@ function ir(nome, semHistorico) {
   if (!document.getElementById("tela-" + nome) || nome === "conteudo") nome = "hoje";
   mostrar(nome);
   if (location.hash !== "#" + nome) semHistorico ? history.replaceState(null, "", "#" + nome) : history.pushState(null, "", "#" + nome);
-  if (nome === "mapa") desenharMapa();
+  if (nome === "mapa") { desenharMapa(); if (semHistorico && mapaRolagem) requestAnimationFrame(() => window.scrollTo(0, mapaRolagem)); }
   if (nome === "tempo") desenharTempo();
   if (nome === "hoje") desenharHoje();
   if (nome === "registrar") fontesRecentes();
@@ -1222,8 +1234,16 @@ function mostrarSelecao() {
   const r = el.getBoundingClientRect();
   if (r.top > innerHeight - 160) window.scrollBy({top: r.top - innerHeight * .42, behavior: "smooth"});
 }
-function previaItem(x) { paginaItem(x, "#selecao-mapa", true); mostrarSelecao(); }
-function previaGalho(cam) { paginaGalho(cam, "#selecao-mapa", true); mostrarSelecao(); }
+/* o que está aberto embaixo do mapa fica guardado: voltar de um conhecimento não apaga */
+let selMapa = null;
+function previaItem(x, rolar = true) { selMapa = {item: x.id}; paginaItem(x, "#selecao-mapa", true); if (rolar) mostrarSelecao(); }
+function previaGalho(cam, rolar = true) { selMapa = {galho: cam}; paginaGalho(cam, "#selecao-mapa", true); if (rolar) mostrarSelecao(); }
+function limparSelecao() { selMapa = null; fecharPainel(); }
+function restaurarSelecao() {
+  if (!selMapa) return;
+  if (selMapa.item && porId(selMapa.item)) { previaItem(porId(selMapa.item), false); realcarPorId("i" + selMapa.item); }
+  else if (selMapa.galho) { previaGalho(selMapa.galho, false); realcarPorId(selMapa.galho.join(">")); }
+}
 function visaoGeral() {
   const cont = D.reduce((a, x) => (a[x.c[0]] = (a[x.c[0]] || 0) + 1, a), {});
   $("#selecao-mapa").innerHTML = `<div class="bloco-topo"><h2>Todos os temas</h2><span class="sec num">${Object.keys(cont).length}</span></div>
@@ -1319,7 +1339,7 @@ document.addEventListener("click", e => {
   if (e.target.closest("#detalhe")) return;
   const sm = e.target.closest("#selecao-mapa [data-abrir-item], #selecao-mapa [data-abrir-galho]");
   if (sm) {
-    if (sm.dataset.abrirItem) { const id = +sm.dataset.abrirItem; previaItem(porId(id)); realcarPorId("i" + id); }
+    if (sm.dataset.abrirItem) abrirDe(sm);
     else { const cam = sm.dataset.abrirGalho.split(">"); previaGalho(cam); realcarPorId(cam.join(">")); }
     return;
   }
@@ -1335,7 +1355,10 @@ document.addEventListener("click", e => {
 document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches("[data-abrir-item][tabindex]")) { e.preventDefault(); e.target.click(); } });
 ["pointerdown", "wheel", "touchstart"].forEach(ev => $("#detalhe").addEventListener(ev, e => e.stopPropagation(), {passive: true}));
 addEventListener("keydown", e => { if (e.key === "Escape") fecharPainel(); });
+/* o grafo mantém bolinhas, linhas e nomes do mesmo tamanho na tela em qualquer zoom */
+let aoZoom = null;
 function desenharMapa() {
+  aoZoom = null;
   const svg = d3.select("#svg-mapa"); svg.selectAll("*").remove(); svgSel = svg;
   realcarPorId = () => {}; $("#arvore-voltar").hidden = true; fecharPainel();
   $$(".abas button").forEach(x => x.setAttribute("aria-selected", String(x.dataset.aba === aba)));
@@ -1343,14 +1366,17 @@ function desenharMapa() {
   const W = $("#palco").clientWidth, H = $("#palco").clientHeight;
   svg.attr("viewBox", [-W / 2, -H / 2, W, H]);
   const g = svg.append("g");
-  zoomAtual = d3.zoom().scaleExtent([.4, 5]).on("zoom", e => g.attr("transform", e.transform));
+  zoomAtual = d3.zoom().scaleExtent([.4, 5])
+    .filter(e => (!e.ctrlKey || e.type === "wheel") && !e.button && (e.type !== "touchstart" || e.touches.length > 1))
+    .on("zoom", e => { g.attr("transform", e.transform); if (aoZoom) aoZoom(e.transform.k); });
   svg.call(zoomAtual).on("dblclick.zoom", null);
   $("#mapa-conta").innerHTML = `${D.length} ${D.length === 1 ? "conhecimento" : "conhecimentos"}<span class="so-pc-inline"> · ${new Set(D.map(x => x.c[0])).size} temas</span>`;
   const cs = getComputedStyle(document.documentElement), cor = v => cs.getPropertyValue(v).trim();
   if (aba === "grafo") grafo(g, cor, W, H); else arvore(g, cor, W, H);
+  restaurarSelecao();
 }
 function grafo(g, cor, W, H) {
-  $("#dica-mapa").textContent = "Toque num ponto para ver. Puxe para mexer.";
+  $("#dica-mapa").textContent = matchMedia("(pointer: coarse)").matches ? "Toque num ponto para ver. Dois dedos movem e dão zoom." : "Toque num ponto para ver. Arraste para mover, role para zoom.";
   /* Árvore radial: o cérebro no centro, temas em volta, galhos saindo, conhecimentos na borda */
   const raiz = d3.hierarchy(arvoreDados()).count().sort((a, b) => b.value - a.value);
   d3.tree().size([2 * Math.PI, 1]).separation((a, b) => (a.parent === b.parent ? 1 : 1.8) / Math.max(a.depth, 1))(raiz);
@@ -1369,25 +1395,27 @@ function grafo(g, cor, W, H) {
   const curva = (s, t) => { const m = (s.r + t.r) / 2, a1 = s.depth ? s.a : t.a, [x1, y1] = ponto2(a1, m), [x2, y2] = ponto2(t.a, m); return `M${s.px},${s.py}C${x1 + s.dx},${y1 + s.dy} ${x2 + t.dx},${y2 + t.dy} ${t.px},${t.py}`; };
   const ramos = raiz.links();
   const ligas = L.map(([a, b]) => ({source: mapa.get("i" + a), target: mapa.get("i" + b)})).filter(l => l.source && l.target);
+  let kTela = 1;
   const raio = n => n.depth === 0 ? 36 : n.data.item ? 3 + n.data.item.p * .9 : n.depth === 1 ? 13 : n.depth === 2 ? 6.5 : 4.5;
 
   const gLiga = g.append("g").attr("fill", "none").selectAll("path").data(ligas).join("path")
     .attr("d", l => `M${l.source.px},${l.source.py}Q0,0 ${l.target.px},${l.target.py}`)
-    .attr("stroke", cor("--cor-destaque")).attr("stroke-opacity", .28).attr("stroke-width", 1).attr("stroke-dasharray", "3 4");
-  const gRamo = g.append("g").attr("fill", "none").selectAll("path").data(ramos).join("path")
+    .attr("stroke", cor("--cor-destaque")).attr("stroke-opacity", .7).attr("stroke-width", 1.2).attr("stroke-dasharray", "3 4").attr("opacity", 0);
+  const gRamo = g.append("g").attr("fill", "none").attr("vector-effect", "non-scaling-stroke").selectAll("path").data(ramos).join("path")
     .attr("d", l => curva(l.source, l.target))
     .attr("stroke", l => l.source.depth === 0 ? cor("--cor-destaque") : cor("--cor-apagada"))
     .attr("stroke-opacity", l => l.source.depth === 0 ? .55 : .75)
     .attr("stroke-width", l => l.source.depth === 0 ? 2.2 : l.source.depth === 1 ? 1.4 : 1);
   const ponto = g.append("g").selectAll("circle").data(nos).join("circle")
-    .attr("cx", n => n.px).attr("cy", n => n.py).attr("r", raio)
+    .attr("cx", n => n.px).attr("cy", n => n.py).attr("r", raio).attr("vector-effect", "non-scaling-stroke")
     .attr("fill", n => n.depth === 0 || n.depth === 1 && !n.data.item ? cor("--cor-destaque") : n.data.item ? cor("--p" + n.data.item.p) : cor("--cor-texto"))
     .attr("stroke", cor("--cor-fundo-2")).attr("stroke-width", n => n.depth === 0 ? 6 : 2).attr("pointer-events", "none");
   /* cérebro no centro */
   const centro = g.append("g").attr("pointer-events", "none");
   centro.append("text").attr("text-anchor", "middle").attr("dy", "0.36em").attr("font-family", "tabler-icons").attr("font-size", 38).attr("fill", "#fff").text("");
   const rotDados = nos.filter(n => n.depth && !n.data.item && (W >= 600 || n.depth < 3));
-  const fazRot = cls => g.append("g").selectAll("text").data(rotDados).join("text").style("font-size", n => W < 600 && n.depth > 1 ? "10px" : null)
+  const fonteBase = n => n.depth === 1 ? 13 : W < 600 && n.depth > 1 ? 10 : 11;
+  const fazRot = cls => g.append("g").selectAll("text").data(rotDados).join("text").style("font-size", n => fonteBase(n) + "px")
     .attr("class", n => "no-texto" + (n.depth === 1 ? " tema" : "") + cls)
     .attr("x", n => n.px + Math.cos(n.a) * (raio(n) + 6)).attr("y", n => n.py + Math.sin(n.a) * (raio(n) + 6))
     .attr("dy", "0.35em").attr("text-anchor", n => Math.cos(n.a) > .25 ? "start" : Math.cos(n.a) < -.25 ? "end" : "middle")
@@ -1405,7 +1433,7 @@ function grafo(g, cor, W, H) {
     gLiga.attr("d", l => `M${l.source.px},${l.source.py}Q${(l.source.dx + l.target.dx) / 2},${(l.source.dy + l.target.dy) / 2} ${l.target.px},${l.target.py}`);
     ponto.attr("cx", n => n.px).attr("cy", n => n.py);
     alvo.attr("cx", n => n.px).attr("cy", n => n.py);
-    rot.attr("x", n => n.px + Math.cos(n.a) * (raio(n) + 6)).attr("y", n => n.py + Math.sin(n.a) * (raio(n) + 6));
+    rot.attr("x", n => n.px + Math.cos(n.a) * (raio(n) + 6) / kTela).attr("y", n => n.py + Math.sin(n.a) * (raio(n) + 6) / kTela);
     centro.attr("transform", `translate(${raiz.px},${raiz.py})`);
   };
   let pesos = null, inicio = null, mola = null;
@@ -1430,26 +1458,35 @@ function grafo(g, cor, W, H) {
     svgSel.transition().duration(450).call(zoomAtual.transform, n.depth ? d3.zoomIdentity.scale(k).translate(-n.px, -n.py) : d3.zoomIdentity);
   };
   function realcar(alvoN) {
-    if (!alvoN || !alvoN.depth) { ponto.attr("opacity", 1); gRamo.attr("opacity", 1); gLiga.attr("opacity", 1); rot.attr("opacity", 1); return; }
+    if (!alvoN || !alvoN.depth) { ponto.attr("opacity", 1); gRamo.attr("opacity", 1); gLiga.attr("opacity", 0); rot.attr("opacity", 1); return; }
     const viz = new Set([...alvoN.ancestors(), ...alvoN.descendants()].map(n => n.id));
     ligas.forEach(l => { if (l.source === alvoN) viz.add(l.target.id); if (l.target === alvoN) viz.add(l.source.id); });
     ponto.attr("opacity", n => viz.has(n.id) ? 1 : .14);
     rot.attr("opacity", n => viz.has(n.id) ? 1 : .18);
     gRamo.attr("opacity", l => viz.has(l.source.id) && viz.has(l.target.id) ? 1 : .08);
-    gLiga.attr("opacity", l => viz.has(l.source.id) && viz.has(l.target.id) ? 1 : .05);
+    gLiga.attr("opacity", l => (l.source === alvoN || l.target === alvoN || (alvoN.data.item ? false : viz.has(l.source.id) && viz.has(l.target.id) && (l.source.id === alvoN.id || l.target.id === alvoN.id))) ? 1 : 0);
   }
   alvo.on("click", (e, n) => {
     e.stopPropagation(); realcar(n); focar(n);
-    if (!n.depth) return fecharPainel();
+    if (!n.depth) return limparSelecao();
     n.data.item ? previaItem(n.data.item) : previaGalho(n.cam);
   });
   realcarPorId = id => { const n = mapa.get(id); realcar(n || null); if (n) focar(n); };
-  svgSel.on("click", () => fecharPainel());
+
+  /* zoom: divide os tamanhos pelo zoom, para continuarem iguais na tela */
+  aoZoom = k => {
+    kTela = k;
+    ponto.attr("r", n => raio(n) / k);
+    alvo.attr("r", n => (raio(n) + (n.data.item ? 7 : 10)) / k);
+    rot.style("font-size", n => fonteBase(n) / k + "px").filter(".halo").style("stroke-width", 4 / k + "px");
+    centro.select("text").attr("font-size", 38 / k);
+    desenhar();
+  };
   encaixe = d3.zoomIdentity;
   svgSel.call(zoomAtual.transform, encaixe);
   if (focoMapa) { const n = mapa.get("i" + focoMapa); if (n) setTimeout(() => { realcar(n); focar(n); previaItem(n.data.item); }, 300); focoMapa = null; }
   $("#legenda").innerHTML = `
-<span><i style="background:${cor("--cor-destaque")}"></i>Tema</span><span><i style="background:${cor("--cor-texto")}"></i>Galho</span><span>${[1, 2, 3, 4, 5].map(n => `<i style="background:${cor("--p" + n)}"></i>`).join("")} Prioridade 1 a 5</span><span><svg width="16" height="6" aria-hidden="true"><line x1="0" y1="3" x2="16" y2="3" stroke="${cor("--cor-destaque")}" stroke-dasharray="3 3"/></svg>Ligação da IA</span>`;
+<span><i style="background:${cor("--cor-destaque")}"></i>Tema</span><span><i style="background:${cor("--cor-texto")}"></i>Galho</span><span>${[1, 2, 3, 4, 5].map(n => `<i style="background:${cor("--p" + n)}"></i>`).join("")} Prioridade 1 a 5</span><span><svg width="16" height="6" aria-hidden="true"><line x1="0" y1="3" x2="16" y2="3" stroke="${cor("--cor-destaque")}" stroke-dasharray="3 3"/></svg>Ligação da IA (ao tocar)</span>`;
 }
 function arvore(g, cor, W, H) {
   $("#dica-mapa").textContent = "Toque num pedaço para entrar. Toque no centro para voltar.";
@@ -1503,7 +1540,7 @@ function arvore(g, cor, W, H) {
       .attr("fill-opacity", d => +rotuloVisivel(d, d.alvo)).attrTween("transform", d => () => posRotulo(d.atual)).text(d => nomeCurto(d.data.nome, cabe(d.alvo)))
     rotCentro(p);
     voltarArvore(p);
-    if (p.depth) { const cam = []; let n = p; while (n.depth) { cam.unshift(n.data.nome); n = n.parent; } previaGalho(cam); } else fecharPainel();
+    if (p.depth) { const cam = []; let n = p; while (n.depth) { cam.unshift(n.data.nome); n = n.parent; } previaGalho(cam); } else limparSelecao();
   }
   function voltarArvore(p) {
     const b = $("#arvore-voltar");
