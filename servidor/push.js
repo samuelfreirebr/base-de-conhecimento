@@ -43,6 +43,13 @@ export async function inscrever(sub) {
   return s.inscritos.length;
 }
 
+export async function sair(endpoint) {
+  const s = await carregar();
+  s.inscritos = s.inscritos.filter((x) => x.endpoint !== endpoint);
+  await gravar();
+  return s.inscritos.length;
+}
+
 /* corpo cifrado em aes128gcm (RFC 8291) */
 export function cifrar(texto, p256dh, auth) {
   const ua = Buffer.from(p256dh, 'base64url');

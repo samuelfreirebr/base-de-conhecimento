@@ -573,9 +573,11 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
 .acoes-ed { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 18px; }
 .vazado.pequeno { min-height: 44px; padding: 0 14px; font-size: .875rem; gap: 6px; }
 .vazado.pequeno i { font-size: 17px; }
-.push-caixa { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px 16px; padding: 14px 16px; margin: -12px 0 var(--espaco-secao); border: var(--linha) solid var(--cor-linha); border-radius: var(--raio-bloco); }
-.push-caixa .sec { font-size: var(--tamanho-pequeno); max-width: 46ch; }
-.push-caixa[hidden], .push-caixa [hidden] { display: none; }
+.topo-acao svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.topo-acao[hidden] { display: none; }
+#sino .corte { display: none; }
+#sino[aria-pressed="false"] { color: var(--cor-secundaria); }
+#sino[aria-pressed="false"] .corte { display: inline; }
 .link.apagar { justify-self: start; color: #B3261E; text-decoration-color: #F2B8B5; display: inline-flex; align-items: center; gap: 4px; }
 .link.apagar:hover { text-decoration-color: #B3261E; }
 .conteudo-grade { display: grid; gap: 26px; }
@@ -620,6 +622,7 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
   <header class="topo">
     <span class="marca"><i aria-hidden="true"></i>Base de conhecimento pessoal</span>
     <div class="topo-acoes">
+      <button class="topo-acao" id="sino" aria-pressed="false" aria-label="Notificações" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 5a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3a4 4 0 0 0 2 3h-16a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6"/><path d="M9 17v1a3 3 0 0 0 6 0v-1"/><path class="corte" d="M3 3l18 18"/></svg></button>
       <button class="topo-acao" id="atualizar" aria-label="Atualizar"><i class="ti ti-refresh" aria-hidden="true"></i></button>
       <button class="topo-acao" data-ir="buscar" aria-label="Buscar"><i class="ti ti-search" aria-hidden="true"></i></button>
     </div>
@@ -646,8 +649,6 @@ main, .tela, .item, .marco, .cartao, .leitura, .ficha-lado, .mes > *, .msg, .res
         <span class="rotulo" id="hoje-data">Hoje</span>
         <h1 id="t-hoje">Bom dia, Samuel.</h1>
       </div>
-
-      <div class="push-caixa" id="push" hidden><p class="sec" id="push-texto"></p><button class="vazado pequeno" id="push-botao" hidden></button></div>
 
       <div class="metricas" id="metricas"></div>
 
@@ -1837,37 +1838,41 @@ $("#atualizar").onclick = async () => {
 ["gesturestart", "gesturechange", "gestureend"].forEach(t => document.addEventListener(t, e => e.preventDefault(), {passive: false}));
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 
-/* Notificação do próprio app (servidor/push.js). No iPhone só funciona aberto pelo ícone da tela de início (iOS 16.4+). */
-async function desenharPush() {
-  const caixa = $("#push"), texto = $("#push-texto"), botao = $("#push-botao");
+/* Notificação do próprio app (servidor/push.js): sininho no topo liga e desliga.
+   No iPhone só funciona aberto pelo ícone da tela de início (iOS 16.4+). */
+async function desenharSino() {
+  const sino = $("#sino");
   const instalado = matchMedia("(display-mode: standalone)").matches || navigator.standalone;
   const suporta = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
   const iphone = /iPhone|iPad/.test(navigator.userAgent);
-  const mostrar = (msg, rotulo, acao) => { caixa.hidden = false; texto.textContent = msg; botao.hidden = !rotulo; if (rotulo) { botao.textContent = rotulo; botao.onclick = acao; } };
-  if (!suporta) return iphone && !instalado ? mostrar("Para receber notificações, abra a Base pelo ícone da tela de início (Compartilhar › Adicionar à Tela de Início).") : iphone ? mostrar("Este iPhone não aceita notificações de app instalado. Atualize para o iOS 16.4 ou mais novo.") : null;
-  if (Notification.permission === "denied") return mostrar("As notificações estão bloqueadas. Libere em Ajustes › Notificações › Conhecimento.");
-  const reg = await navigator.serviceWorker.ready;
-  const sub = await reg.pushManager.getSubscription();
-  if (Notification.permission === "granted" && sub) return mostrar("Notificações ativas neste aparelho.", "Mandar notificação de teste", async () => {
-    botao.disabled = true;
-    try { const r = await api("/api/push/teste", {method: "POST", json: {}}); texto.textContent = r.enviados ? "Enviada. Deve chegar em alguns segundos." : "Não consegui entregar. Tente ativar de novo."; }
-    catch (e) { texto.textContent = e.message; }
-    botao.disabled = false;
-  });
-  mostrar("Receba avisos da Base no celular, com o ícone dela.", "Ativar notificações", async () => {
-    botao.disabled = true;
+  if (!suporta && !iphone) return;
+  sino.hidden = false;
+  const reg = suporta ? await navigator.serviceWorker.ready : null;
+  const sub = reg ? await reg.pushManager.getSubscription() : null;
+  const ativo = suporta && Notification.permission === "granted" && !!sub;
+  sino.setAttribute("aria-pressed", String(ativo));
+  sino.setAttribute("aria-label", ativo ? "Notificações ligadas. Tocar desliga" : "Notificações desligadas. Tocar liga");
+  sino.onclick = async () => {
+    if (!suporta) return alert(instalado ? "Este iPhone não aceita notificações de app instalado. Atualize para o iOS 16.4 ou mais novo." : "Para receber notificações, abra a Base pelo ícone da tela de início (Compartilhar › Adicionar à Tela de Início).");
+    if (Notification.permission === "denied") return alert("As notificações estão bloqueadas. Libere em Ajustes › Notificações › Conhecimento.");
+    sino.disabled = true;
     try {
-      if (await Notification.requestPermission() !== "granted") return desenharPush();
-      const {chave} = await api("/api/push/chave");
-      const bytes = Uint8Array.from(atob(chave.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
-      const nova = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: bytes});
-      await api("/api/push/inscrever", {method: "POST", json: nova.toJSON()});
-    } catch (e) { texto.textContent = "Não deu para ativar: " + e.message; botao.disabled = false; return; }
-    botao.disabled = false;
-    desenharPush();
-  });
+      if (ativo) {
+        await api("/api/push/sair", {method: "POST", json: {endpoint: sub.endpoint}});
+        await sub.unsubscribe();
+      } else {
+        if (await Notification.requestPermission() !== "granted") return;
+        const {chave} = await api("/api/push/chave");
+        const bytes = Uint8Array.from(atob(chave.replace(/-/g, "+").replace(/_/g, "/")), c => c.charCodeAt(0));
+        const nova = await reg.pushManager.subscribe({userVisibleOnly: true, applicationServerKey: bytes});
+        await api("/api/push/inscrever", {method: "POST", json: nova.toJSON()});
+        await api("/api/push/teste", {method: "POST", json: {}});   /* confirma com um aviso */
+      }
+    } catch (e) { alert("Não deu: " + e.message); }
+    finally { sino.disabled = false; desenharSino(); }
+  };
 }
-desenharPush().catch(() => {});
+desenharSino().catch(() => {});
 </script>
 </body>
 </html>

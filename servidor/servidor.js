@@ -117,7 +117,8 @@ async function api(req, res, url) {
   /* notificação do próprio app: chave pública, inscrever o aparelho e mandar um teste */
   if (rota === 'GET /api/push/chave') return json(res, 200, { chave: await push.chavePublica() });
   if (rota === 'POST /api/push/inscrever') return json(res, 200, { aparelhos: await push.inscrever(await lerJson(req)) });
-  if (rota === 'POST /api/push/teste') return json(res, 200, await push.avisar({ titulo: 'Notificação funcionando', texto: 'Este aviso veio da sua Base de conhecimento, com o ícone dela.', url: '/' }));
+  if (rota === 'POST /api/push/sair') return json(res, 200, { aparelhos: await push.sair(String((await lerJson(req)).endpoint || '')) });
+  if (rota === 'POST /api/push/teste') return json(res, 200, await push.avisar({ titulo: 'Notificações ligadas', texto: 'Os avisos da Base de conhecimento vão chegar aqui.', url: '/' }));
   if (rota === 'POST /api/revisar') {
     const d = await lerJson(req);
     const r = base.marcarRevisao(Number(d.id), d.lembrou, d.temp);
