@@ -13,3 +13,18 @@ self.addEventListener('fetch', (e) => {
     return r;
   }).catch(() => caches.match(e.request).then((r) => r || caches.match('/'))));
 });
+
+/* Notificação do próprio app (servidor/push.js): mostra e, ao tocar, abre o app no endereço do aviso */
+self.addEventListener('push', (e) => {
+  let d = {};
+  try { d = e.data ? e.data.json() : {}; } catch { d = { texto: e.data && e.data.text() }; }
+  e.waitUntil(self.registration.showNotification(d.titulo || 'Base de conhecimento', { body: d.texto || '', icon: '/icone-app-192.png', badge: '/icone-app-192.png', data: { url: d.url || '/' } }));
+});
+self.addEventListener('notificationclick', (e) => {
+  e.notification.close();
+  const url = new URL((e.notification.data && e.notification.data.url) || '/', self.location.origin).href;
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((abertas) => {
+    const ja = abertas.find((c) => c.url.startsWith(self.location.origin));
+    return ja ? ja.navigate(url).then((c) => (c || ja).focus()) : self.clients.openWindow(url);
+  }));
+});

@@ -13,6 +13,7 @@ import { extname, join, normalize } from 'node:path';
 import * as seg from './seguranca.js';
 import * as base from './dados.js';
 import * as ia from './ia.js';
+import * as push from './push.js';
 import { legendaDoYoutube, trechosDeTexto, textoDoDocx } from './fontes-externas.js';
 
 const PORTA = Number(process.env.PORTA || 3000);
@@ -113,6 +114,10 @@ async function api(req, res, url) {
     return json(res, 200, { item: x, ligados: base.ligacoesDe(x.id).map(base.porId) });
   }
   if (rota === 'POST /api/registrar') return json(res, 200, await registrar(await lerJson(req)));
+  /* notificação do próprio app: chave pública, inscrever o aparelho e mandar um teste */
+  if (rota === 'GET /api/push/chave') return json(res, 200, { chave: await push.chavePublica() });
+  if (rota === 'POST /api/push/inscrever') return json(res, 200, { aparelhos: await push.inscrever(await lerJson(req)) });
+  if (rota === 'POST /api/push/teste') return json(res, 200, await push.avisar({ titulo: 'Notificação funcionando', texto: 'Este aviso veio da sua Base de conhecimento, com o ícone dela.', url: '/' }));
   if (rota === 'POST /api/revisar') {
     const d = await lerJson(req);
     const r = base.marcarRevisao(Number(d.id), d.lembrou, d.temp);
