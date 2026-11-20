@@ -115,7 +115,7 @@ async function api(req, res, url) {
   if (rota === 'POST /api/registrar') return json(res, 200, await registrar(await lerJson(req)));
   if (rota === 'POST /api/revisar') {
     const d = await lerJson(req);
-    const r = base.marcarRevisao(Number(d.id), d.lembrou);
+    const r = base.marcarRevisao(Number(d.id), d.lembrou, d.temp);
     if (!r) throw erro('Conhecimento não encontrado.', 404);
     await base.salvar();
     return json(res, 200, { ...r, hoje: base.hoje() });

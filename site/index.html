@@ -216,9 +216,9 @@ main { padding: 28px var(--espaco-lateral) calc(var(--altura-menu-celular) + 48p
   .revisao .revisao-botoes { grid-template-columns: repeat(2, 170px); margin-top: 4px; }
   .revisao .revisao-botoes .botao, .revisao .revisao-botoes .vazado { min-height: 44px; font-size: .9375rem; }
 }
-.revisao-topo { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.revisao-topo { display: flex; flex-direction: column-reverse; gap: 14px; }
 .passos { display: flex; gap: 4px; }
-.passos i { width: 18px; height: var(--regua); background: var(--cor-linha-forte); }
+.passos i { flex: 1; max-width: 28px; height: var(--regua); background: var(--cor-linha-forte); }
 .passos i.feito { background: var(--cor-texto); }
 .passos i.agora { background: var(--cor-destaque); }
 .revisao blockquote { margin: 0; font-size: var(--tamanho-destaque); font-weight: 650; letter-spacing: -.02em; line-height: 1.38; max-width: 40ch; text-wrap: pretty; }
@@ -230,6 +230,26 @@ main { padding: 28px var(--espaco-lateral) calc(var(--altura-menu-celular) + 48p
 .revisao .aviso { font-size: var(--tamanho-pequeno); color: var(--cor-texto-2); min-height: 20px; font-weight: 600; }
 .revisao .aviso i { color: var(--cor-destaque); vertical-align: -3px; font-size: 17px; }
 .revisao.fim { align-content: center; justify-items: start; }
+.revisao-mais summary { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; font-weight: 700; font-size: var(--tamanho-pequeno); list-style: none; }
+.revisao-mais summary::-webkit-details-marker { display: none; }
+.revisao-mais summary i { font-size: 17px; color: var(--cor-destaque); transform: rotate(90deg); transition: transform var(--velocidade); }
+.revisao-mais[open] summary i { transform: rotate(-90deg); }
+.revisao-mais[open] summary .abrir, .revisao-mais:not([open]) summary .fechar { display: none; }
+.revisao-mais .corpo { margin-top: 16px; padding: 18px; background: var(--cor-fundo); border-radius: var(--raio-campo); }
+.revisao-mais .corpo > p, .revisao-mais .corpo ul { font-size: 1rem; }
+.revisao-mais img { width: 100%; border-radius: var(--raio-midia); }
+.temperatura { display: grid; gap: 8px; }
+.temperatura .tit { font-size: var(--tamanho-pequeno); font-weight: 700; }
+.temperatura .tit b { color: var(--cor-destaque); }
+.temp-barra { -webkit-appearance: none; appearance: none; width: 100%; height: 32px; background: none; margin: 0; cursor: pointer; }
+.temp-barra::-webkit-slider-runnable-track { height: 10px; border-radius: 99px; background: linear-gradient(to right, var(--cor-apagada), var(--p0) 18%, var(--p2) 50%, var(--p5)); }
+.temp-barra::-moz-range-track { height: 10px; border-radius: 99px; background: linear-gradient(to right, var(--cor-apagada), var(--p0) 18%, var(--p2) 50%, var(--p5)); }
+.temp-barra::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; margin-top: -9px; border-radius: 50%; background: var(--cor-fundo); border: 3px solid var(--cor-texto); box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+.temp-barra::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--cor-fundo); border: 3px solid var(--cor-texto); }
+.temp-marcas { display: flex; justify-content: space-between; padding: 0 13px; margin-top: -4px; }
+.temp-marcas i { width: 2px; height: 6px; border-radius: 2px; background: var(--cor-linha-forte); }
+.temp-pontas { display: grid; grid-template-columns: 1fr auto 1fr; font-size: var(--tamanho-rotulo); font-weight: 650; color: var(--cor-secundaria); }
+.temp-pontas span:last-child { text-align: right; }
 .cartao-sai { animation: sai .24s var(--curva) forwards; }
 @keyframes sai { to { opacity: 0; transform: translateX(-14px); } }
 .barras { display: grid; gap: 14px; padding-top: 18px; }
@@ -953,24 +973,35 @@ function desenharRevisao() {
   box.innerHTML = `
     <div class="revisao-topo"><span class="caminho">${caminho(x.c)}</span><span class="passos" aria-hidden="true">${FILA.map((_, n) => `<i class="${n < rev.i ? "feito" : n === rev.i ? "agora" : ""}"></i>`).join("")}</span></div>
     <blockquote>${esc(x.t)}</blockquote>
+    ${x.corpo || x.imagem ? `<details class="revisao-mais"><summary><span class="abrir">Ver conteúdo completo</span><span class="fechar">Fechar conteúdo</span><i class="ti ti-chevron-right" aria-hidden="true"></i></summary><div class="corpo">${x.imagem ? `<img src="/api/imagens/${x.imagem}" alt="Foto registrada com este conhecimento" loading="lazy">` : ""}${x.corpo ? corpoHtml(x.corpo) : ""}</div></details>` : ""}
     <div class="fonte">${icone(x.o)}${esc(x.f)} · ${dataCurta(x.d)} ${prio(x.p)}</div>
+    <div class="temperatura">
+      <span class="tit">Quanto quer ser lembrado disso? <b id="temp-nome">${TEMPS[(x.temp ?? 0) + 3]}</b></span>
+      <input type="range" class="temp-barra" id="temp" min="-3" max="3" step="1" value="${x.temp ?? 0}" aria-label="Quanto quer ser lembrado">
+      <div class="temp-marcas" aria-hidden="true">${"<i></i>".repeat(7)}</div>
+      <div class="temp-pontas"><span>Não lembrar mais</span><span>Normal</span><span>Lembrar mais</span></div>
+    </div>
     <p class="aviso" id="rev-aviso"></p>
     <div class="revisao-botoes">
       <button class="vazado" data-r="0">Esqueci</button>
       <button class="botao" data-r="1"><span>Lembrei</span><span class="seta"></span></button>
     </div>`;
+  $("#temp").oninput = e => $("#temp-nome").textContent = TEMPS[+e.target.value + 3];
   box.querySelectorAll("[data-r]").forEach(b => b.onclick = () => responder(b.dataset.r === "1", x));
 }
+/* temperatura: do "não lembrar mais" (-3) ao "lembrar muito mais" (+3) */
+const TEMPS = ["Não lembrar mais", "Bem menos", "Menos", "Normal", "Mais", "Bem mais", "Muito mais"];
 async function responder(lembrou, x) {
   $$("#revisao [data-r]").forEach(b => b.disabled = true);
+  const temp = +$("#temp").value;
   let dias = 1;
   try {
-    const r = await api("/api/revisar", {method: "POST", json: {id: x.id, lembrou}});
-    dias = r.dias; INFO = r.hoje; x.srs = {...(x.srs || {}), volta: r.volta};
+    const r = await api("/api/revisar", {method: "POST", json: {id: x.id, lembrou, temp}});
+    dias = r.dias; INFO = r.hoje; x.temp = temp; x.srs = {...(x.srs || {}), volta: r.volta, parado: r.volta ? undefined : true};
   } catch (e) {
     $("#rev-aviso").textContent = e.message; $$("#revisao [data-r]").forEach(b => b.disabled = false); return;
   }
-  $("#rev-aviso").innerHTML = `<i class="ti ti-calendar-repeat" aria-hidden="true"></i> ${dias === 1 ? "Volta amanhã para fixar." : "Volta daqui a " + dias + " dias."}`;
+  $("#rev-aviso").innerHTML = `<i class="ti ti-calendar-repeat" aria-hidden="true"></i> ${dias === null ? "Pronto, esse não volta mais." : dias === 1 ? "Volta amanhã para fixar." : "Volta daqui a " + dias + " dias."}`;
   setTimeout(() => {
     $("#revisao blockquote").classList.add("cartao-sai");
     setTimeout(() => { rev.i++; rev.feitos++; desenharHoje(); }, 230);
@@ -1266,7 +1297,7 @@ function paginaItem(x, alvo = "#conteudo", inline = false) {
           <div><dt>Tipo</dt><dd>${NOME_ORIGEM[x.o] || x.o}</dd></div>
           <div><dt>Registrado</dt><dd>${dt}</dd></div>
           <div><dt>Prioridade</dt><dd>${prio(x.p)} ${x.p} de 5</dd></div>
-          ${prox ? `<div><dt>Volta</dt><dd>${prox}</dd></div>` : ""}
+          ${prox ? `<div><dt>Volta</dt><dd>${prox}</dd></div>` : x.srs?.parado ? `<div><dt>Volta</dt><dd>Não volta mais · <button class="link" data-religar="${x.id}">Voltar a lembrar</button></dd></div>` : ""}
         </dl>
         <button class="botao" data-perguntar-sobre="${esc("Me explica melhor e liga com o que eu já sei: " + x.t)}"><span>Perguntar ao assistente</span><span class="seta"><i class="ti ti-brain" aria-hidden="true"></i></span></button>
         <div class="acoes-item">
@@ -1400,6 +1431,7 @@ document.addEventListener("click", e => {
   if (e.target.closest("[data-ir-arvore]")) { aba = "arvore"; ir("mapa"); return; }
   const edt = e.target.closest("[data-editar]"); if (edt) { abrirEdicao(porId(+edt.dataset.editar), edt.closest("#selecao-mapa") ? "#selecao-mapa" : "#conteudo"); return; }
   const og = e.target.closest("[data-original]"); if (og) { alternarOriginal(og); return; }
+  const rl = e.target.closest("[data-religar]"); if (rl) { const x = porId(+rl.dataset.religar); api(`/api/conhecimentos/${x.id}`, {method: "PATCH", json: {lembrar: true}}).then(r => { Object.assign(x, r.item); rl.parentElement.textContent = "Amanhã"; }).catch(err => rl.textContent = err.message); return; }
   const cp = e.target.closest("[data-copiar]"); if (cp) { copiarItem(porId(+cp.dataset.copiar), cp); return; }
   const ap = e.target.closest("[data-apagar]"); if (ap) { apagarItem(porId(+ap.dataset.apagar)); return; }
   if (e.target.closest("[data-ir-revisao]")) { $("#revisao").scrollIntoView({behavior: "smooth", block: "center"}); return; }

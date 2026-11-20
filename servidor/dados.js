@@ -9,7 +9,7 @@
 
 import { readFile, writeFile, rename, mkdir, copyFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { novoEstado, revisar, hojeISO } from './srs.js';
+import { novoEstado, revisar, hojeISO, somarDias } from './srs.js';
 
 export const PASTA_DADOS = process.env.PASTA_DADOS || new URL('../dados-local', import.meta.url).pathname;
 const ARQ = join(PASTA_DADOS, 'base.json');
@@ -95,6 +95,8 @@ export function editar(id, campos) {
   if (typeof campos.url === 'string') { const u = campos.url.trim(); if (ehUrl(u)) x.url = u; else if (!u) delete x.url; }
   if (ORIGENS.includes(campos.o)) x.o = campos.o;
   if ([1, 2, 3, 4, 5].includes(Number(campos.p))) x.p = Number(campos.p);
+  /* religar: o conhecimento parado volta amanhã no Lembrar hoje */
+  if (campos.lembrar === true && x.srs) { delete x.srs.parado; x.srs.volta = somarDias(hojeISO(), 1); x.temp = 0; }
   x.editado = new Date().toISOString();
   return x;
 }
@@ -134,7 +136,7 @@ const POR_DIA = 15;
 export function hoje() {
   const h = hojeISO();
   const fila = base.itens
-    .filter((x) => x.srs && x.srs.volta <= h && x.srs.ultima !== h)
+    .filter((x) => x.srs?.volta && x.srs.volta <= h && x.srs.ultima !== h)
     .sort((a, b) => b.p - a.p || a.srs.volta.localeCompare(b.srs.volta))
     .slice(0, Math.max(0, POR_DIA - (base.revisoes[h] || 0)))
     .map((x) => x.id);
@@ -149,11 +151,12 @@ export function hoje() {
   return { fila, feitosHoje: base.revisoes[h] || 0, sequencia: seq, ultimos14 };
 }
 
-export function marcarRevisao(id, lembrou) {
+export function marcarRevisao(id, lembrou, temp = porId(id)?.temp) {
   const x = porId(id);
   if (!x) return null;
-  const r = revisar(x.srs || novoEstado(), Boolean(lembrou), x.p);
+  const r = revisar(x.srs || novoEstado(), Boolean(lembrou), temp);
   x.srs = r.estado;
+  x.temp = Math.max(-3, Math.min(3, Math.round(Number(temp) || 0)));
   const h = hojeISO();
   base.revisoes[h] = (base.revisoes[h] || 0) + 1;
   return { dias: r.dias, volta: x.srs.volta };
